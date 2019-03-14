@@ -17,9 +17,11 @@
 package com.example.android.mediasession.service.contentcatalogs;
 
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
@@ -39,7 +41,7 @@ public class MusicLibrary {
     private static final HashMap<String, Integer> albumRes = new HashMap<>();
     private static final HashMap<String, String> musicFileName = new HashMap<>();
 
-    static {
+    /*static {
         createMediaMetadataCompat(
                 "Jazz_In_Paris",
                 "Jazz in Paris",
@@ -62,7 +64,7 @@ public class MusicLibrary {
                 "the_coldest_shoulder.mp3",
                 R.drawable.album_youtube_audio_library_rock_2,
                 "album_youtube_audio_library_rock_2");
-    }
+    }*/
 
     public static String getRoot() {
         return "root";
@@ -120,7 +122,7 @@ public class MusicLibrary {
         return builder.build();
     }
 
-    private static void createMediaMetadataCompat(
+    public static void createMediaMetadataCompat(
             String mediaId,
             String title,
             String artist,

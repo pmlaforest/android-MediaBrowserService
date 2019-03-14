@@ -34,3 +34,7 @@ output.json
 #NDK
 obj/
 .externalNativeBuild
+.project
+.settings/org.eclipse.buildship.core.prefs
+Application/.classpath
+Application/.settings/org.eclipse.buildship.core.prefs

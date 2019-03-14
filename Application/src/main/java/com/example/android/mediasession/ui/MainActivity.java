@@ -16,8 +16,17 @@
 
 package com.example.android.mediasession.ui;
 
+import android.Manifest;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -35,7 +44,9 @@ import com.example.android.mediasession.client.MediaBrowserHelper;
 import com.example.android.mediasession.service.MusicService;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 
+import java.net.URI;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -49,10 +60,13 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean mIsPlaying;
 
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        checkUserPermission();
 
         mTitleTextView = findViewById(R.id.song_title);
         mArtistTextView = findViewById(R.id.song_artist);
@@ -65,9 +79,91 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button_play).setOnClickListener(clickListener);
         findViewById(R.id.button_next).setOnClickListener(clickListener);
 
+        initialiseMusicLibrary();
+
         mMediaBrowserHelper = new MediaBrowserConnection(this);
         mMediaBrowserHelper.registerCallback(new MediaBrowserListener());
     }
+
+    /**
+     * Vérifie les permissions nécessaire pour l'accès aux médias 
+     * (nécessaire pour API 22+) et les demandes à l'utilisateur au besoin.
+     */
+    private void checkUserPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Should we show an explanation?
+                if (shouldShowRequestPermissionRationale(
+                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    // Explain to the user why we need to read the contacts
+                }
+
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+                // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
+                // app-defined int constant that should be quite unique
+
+                return;
+            }
+        }
+
+    }
+    
+    /**
+     * Récupère les musiques de l'appareille et les ajoute à la MusicLibrary.
+     */
+    private void initialiseMusicLibrary() {
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
+
+        ContentResolver cResolver = getContentResolver();
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        Cursor cursor = cResolver.query(uri, null, selection, null, null);
+        if (cursor == null) {
+            throw new RuntimeException("cannot access MediaStore");
+        } else if (!cursor.moveToFirst()) {
+            // no medias
+        } else {
+            int idColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
+            //int titleColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media.TITLE);
+            //int artistColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
+            //int albumColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
+            //int durationColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+
+
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+
+            do {
+                long thisId = cursor.getLong(idColumn);
+                Uri contentUri = ContentUris.withAppendedId(
+                        android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, thisId);
+                mmr.setDataSource(this, contentUri);
+
+                MusicLibrary.createMediaMetadataCompat(
+                        contentUri.toString(),
+                        mmr.extractMetadata(mmr.METADATA_KEY_TITLE),
+                        mmr.extractMetadata(mmr.METADATA_KEY_ARTIST),
+                        mmr.extractMetadata(mmr.METADATA_KEY_ALBUM),
+                        mmr.extractMetadata(mmr.METADATA_KEY_GENRE),
+                        TimeUnit.MILLISECONDS.toSeconds(
+                                Long.parseLong(
+                                        mmr.extractMetadata(mmr.METADATA_KEY_DURATION)
+                                )
+                        ),
+                        TimeUnit.SECONDS,
+                        contentUri.toString(),
+                        R.drawable.album_jazz_blues,
+                        "album_jazz_blues"
+                );
+
+            } while (cursor.moveToNext());
+        }
+
+
+    }
+
 
     @Override
     public void onStart() {
