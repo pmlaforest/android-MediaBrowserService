@@ -22,4 +22,5 @@
     <string name="label_play_pause">Play and pause toggle</string>
     <string name="label_previous">Previous track</string>
     <string name="label_next">Next track</string>
+    <string name="shortcut_wifip2p">WiFiP2P</string>
 </resources>

@@ -25,8 +25,7 @@ import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
-import com.example.android.mediasession.BuildConfig;
-import com.example.android.mediasession.R;
+import com.example.android.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
