@@ -12,14 +12,14 @@
         android:orientation="horizontal"
         style="@style/LayoutMargin">
         <fragment
-            class="com.example.android.wifip2p.Fragment.DeviceListFragment"
+            class="com.example.android.wifip2p.fragment.DeviceListFragment"
             android:id="@+id/frag_list"
             android:layout_width="@dimen/phone_list_height"
             android:layout_height="match_parent">
             <!-- Preview: layouts=@layouts/row_devices -->
         </fragment>
         <fragment
-            class="com.example.android.wifip2p.Fragment.DeviceDetailFragment"
+            class="com.example.android.wifip2p.fragment.DeviceDetailFragment"
             android:id="@+id/frag_detail"
             android:layout_width="match_parent"
             android:layout_height="match_parent">

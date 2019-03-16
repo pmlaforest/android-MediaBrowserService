@@ -1,4 +1,4 @@
-package com.example.android.wifip2p.FileTransfert;
+package com.example.android.wifip2p.file_transfert;
 
 import android.app.IntentService;
 import android.content.ContentResolver;
@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
-import com.example.android.wifip2p.Fragment.DeviceDetailFragment;
+import com.example.android.wifip2p.fragment.DeviceDetailFragment;
 import com.example.android.wifip2p.WiFiDirectActivity;
 import java.io.FileNotFoundException;
 import java.io.IOException;

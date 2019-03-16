@@ -10,8 +10,8 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.net.wifi.p2p.WifiP2pManager.PeerListListener;
 import android.util.Log;
 
-import com.example.android.wifip2p.Fragment.DeviceDetailFragment;
-import com.example.android.wifip2p.Fragment.DeviceListFragment;
+import com.example.android.wifip2p.fragment.DeviceDetailFragment;
+import com.example.android.wifip2p.fragment.DeviceListFragment;
 import com.example.android.R;
 
 /**

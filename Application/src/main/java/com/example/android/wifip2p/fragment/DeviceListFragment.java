@@ -1,4 +1,4 @@
-package com.example.android.wifip2p.Fragment;
+package com.example.android.wifip2p.fragment;
 
 import android.app.ListFragment;
 import android.app.ProgressDialog;

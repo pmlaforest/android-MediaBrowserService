@@ -16,7 +16,8 @@
   -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.example.android">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.android">
 
     <!-- MediaBrowser permissions -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -37,14 +38,18 @@
 
     <application
             android:allowBackup="true"
+            android:fullBackupContent="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:supportsRtl="true"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+
+            tools:ignore="GoogleAppIndexingWarning">
 
         <!-- MediaBrowser -->
         <activity
                 android:name=".mediasession.ui.MainActivity"
+                android:screenOrientation="portrait"
                 android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -79,13 +84,15 @@
         <!-- WiFiP2P -->
         <activity
             android:name=".wifip2p.WiFiDirectActivity"
-            android:label="@string/app_name"
             android:launchMode="singleTask">
+            <intent-filter>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
         </activity>
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.example.android.musicPlayer.fileprovider"
+            android:authorities="com.example.android.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -95,7 +102,7 @@
 
         <!-- Used for transferring files  after a successful connection -->
         <service
-            android:name=".wifip2p.FileTransfert.FileTransferService"
+            android:name=".wifip2p.file_transfert.FileTransferService"
             android:enabled="true" />
 
     </application>

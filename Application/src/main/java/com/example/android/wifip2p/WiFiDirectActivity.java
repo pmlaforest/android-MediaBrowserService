@@ -23,10 +23,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.example.android.wifip2p.Fragment.DeviceDetailFragment;
-import com.example.android.wifip2p.Fragment.DeviceListFragment;
-import com.example.android.wifip2p.Fragment.DeviceListFragment.DeviceActionListener;
+import com.example.android.wifip2p.fragment.DeviceDetailFragment;
+import com.example.android.wifip2p.fragment.DeviceListFragment;
+import com.example.android.wifip2p.fragment.DeviceListFragment.DeviceActionListener;
 import com.example.android.R;
+
 /**
  * An activity that uses WiFi Direct APIs to discover and connect with available
  * devices. WiFi Direct APIs are asynchronous and rely on callback mechanism
