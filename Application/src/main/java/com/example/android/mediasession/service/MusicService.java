@@ -158,7 +158,11 @@ public class MusicService extends MediaBrowserServiceCompat {
 
         @Override
         public void onSkipToNext() {
-            mQueueIndex = (++mQueueIndex % mPlaylist.size());
+            if (mPlaylist.size() < 1) {
+                mQueueIndex = -1;
+            } else {
+                mQueueIndex = (++mQueueIndex % mPlaylist.size());
+            }
             mPreparedMedia = null;
             onPlay();
         }
