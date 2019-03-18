@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
+    private static final String MUSIC_FOLDER_NAME = "streamingapp_music";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button_play).setOnClickListener(clickListener);
         findViewById(R.id.button_next).setOnClickListener(clickListener);
 
-        createMusicFolder();
+        createMusicFolder(MUSIC_FOLDER_NAME);
         initialiseMusicLibrary();
 
         mMediaBrowserHelper = new MediaBrowserConnection(this);
@@ -194,7 +196,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private void copySampleToMusicFolder(File sampleFile, String assetsFilename) {
         try {
             sampleFile.createNewFile();
@@ -223,8 +224,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String createMusicFolder() {
-        String musicFolderPath = Environment.getExternalStorageDirectory() + File.separator + "streamingapp_music";
+    private String createMusicFolder(String folderName) {
+        String musicFolderPath = Environment.getExternalStorageDirectory() + File.separator + folderName;
 
         File folder = new File(musicFolderPath);
         boolean success = true;
