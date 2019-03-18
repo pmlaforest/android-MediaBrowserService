@@ -17,23 +17,30 @@
 package com.example.android.mediasession.ui;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v13.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -44,7 +51,14 @@ import com.example.android.mediasession.client.MediaBrowserHelper;
 import com.example.android.mediasession.service.MusicService;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
+import java.nio.channels.FileChannel;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -61,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mIsPlaying;
 
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button_play).setOnClickListener(clickListener);
         findViewById(R.id.button_next).setOnClickListener(clickListener);
 
+        createMusicFolder();
         initialiseMusicLibrary();
 
         mMediaBrowserHelper = new MediaBrowserConnection(this);
@@ -108,6 +124,23 @@ public class MainActivity extends AppCompatActivity {
 
                 return;
             }
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                // Should we show an explanation?
+                if (shouldShowRequestPermissionRationale(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    // Explain to the user why we need to read the contacts
+                }
+
+                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+
+                // MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE is an
+                // app-defined int constant that should be quite unique
+
+                return;
+            }
         }
 
     }
@@ -131,7 +164,6 @@ public class MainActivity extends AppCompatActivity {
             //int artistColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
             //int albumColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
             //int durationColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
-
 
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
 
@@ -160,8 +192,62 @@ public class MainActivity extends AppCompatActivity {
 
             } while (cursor.moveToNext());
         }
+    }
 
 
+    private void copySampleToMusicFolder(File sampleFile, String assetsFilename) {
+        try {
+            sampleFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SecurityException se) {
+            Log.d("user permission:",  "file creation denied");
+        }
+
+        AssetFileDescriptor sampleFileFd = null;
+        try {
+
+            sampleFileFd = this.getAssets().openFd(assetsFilename);
+            try (InputStream in = sampleFileFd.createInputStream()) {
+                try (OutputStream out = new FileOutputStream(sampleFile.getAbsolutePath())) {
+                    // Transfer bytes from in to out
+                    byte[] buf = new byte[1024];
+                    int len;
+                    while ((len = in.read(buf)) > 0) {
+                        out.write(buf, 0, len);
+                    }
+                }
+            }
+            } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String createMusicFolder() {
+        String musicFolderPath = Environment.getExternalStorageDirectory() + File.separator + "streamingapp_music";
+
+        File folder = new File(musicFolderPath);
+        boolean success = true;
+        if (!folder.exists()) {
+            success = folder.mkdirs();
+        }
+
+        String jazzInParisFullpath = musicFolderPath + File.separator + "jazz_in_paris.mp3";
+        String theColdestShoulderFullpath = musicFolderPath + File.separator + "the_coldest_shoulder.mp3";
+
+        File jazzInParisFile = new File(jazzInParisFullpath);
+        File theColdestShoulderFile = new File(theColdestShoulderFullpath);
+
+        if (!jazzInParisFile.exists()) {
+            copySampleToMusicFolder(jazzInParisFile, "jazz_in_paris.mp3");
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(jazzInParisFile)));
+        }
+        if (!theColdestShoulderFile.exists()) {
+            copySampleToMusicFolder(theColdestShoulderFile, "the_coldest_shoulder.mp3");
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(theColdestShoulderFile)));
+        }
+
+        return musicFolderPath;
     }
 
     @Override

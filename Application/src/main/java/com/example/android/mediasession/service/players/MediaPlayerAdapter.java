@@ -85,15 +85,7 @@ public final class MediaPlayerAdapter extends PlayerAdapter {
     public void playFromMedia(MediaMetadataCompat metadata) {
         mCurrentMedia = metadata;
         final String mediaId = metadata.getDescription().getMediaId();
-        if (mediaId == "Jazz_In_Paris" ||
-            mediaId == "The_Coldest_Shoulder") {
-            playFile(MusicLibrary.getMusicFilename(mediaId));
-        }
-        else {
-            // mediaId est maintenant un Uri que l'on utilise pour accéder
-            // au fichier de musique.
-            playFile(mediaId);
-        }
+        playFile(mediaId);
     }
 
     @Override
@@ -125,17 +117,7 @@ public final class MediaPlayerAdapter extends PlayerAdapter {
         // Utilise le mediaId (un Uri) du MusicLibrary pour récupérer la
         // musique. On n'est plus limité au dossier Assets.
         try {
-            if(mFilename == "jazz_in_paris.mp3" ||
-               mFilename == "the_coldest_shoulder.mp3"){
-                AssetFileDescriptor assetFileDescriptor = mContext.getAssets().openFd(mFilename);
-                mMediaPlayer.setDataSource(
-                        assetFileDescriptor.getFileDescriptor(),
-                        assetFileDescriptor.getStartOffset(),
-                        assetFileDescriptor.getLength());
-            }
-            else {
-                mMediaPlayer.setDataSource(this.mContext, Uri.parse(mFilename));
-            }
+            mMediaPlayer.setDataSource(this.mContext, Uri.parse(mFilename));
         } catch (Exception e) {
             throw new RuntimeException("Failed to open file: " + mFilename, e);
         }

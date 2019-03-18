@@ -41,31 +41,6 @@ public class MusicLibrary {
     private static final HashMap<String, Integer> albumRes = new HashMap<>();
     private static final HashMap<String, String> musicFileName = new HashMap<>();
 
-    static {
-        createMediaMetadataCompat(
-                "Jazz_In_Paris",
-                "Jazz in Paris",
-                "Media Right Productions",
-                "Jazz & Blues",
-                "Jazz",
-                103,
-                TimeUnit.SECONDS,
-                "jazz_in_paris.mp3",
-                R.drawable.album_jazz_blues,
-                "album_jazz_blues");
-        createMediaMetadataCompat(
-                "The_Coldest_Shoulder",
-                "The Coldest Shoulder",
-                "The 126ers",
-                "Youtube Audio Library Rock 2",
-                "Rock",
-                160,
-                TimeUnit.SECONDS,
-                "the_coldest_shoulder.mp3",
-                R.drawable.album_youtube_audio_library_rock_2,
-                "album_youtube_audio_library_rock_2");
-    }
-
     public static String getRoot() {
         return "root";
     }
