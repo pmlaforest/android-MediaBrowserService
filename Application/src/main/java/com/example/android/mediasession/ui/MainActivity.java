@@ -17,7 +17,6 @@
 package com.example.android.mediasession.ui;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -32,8 +31,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
-import android.support.v13.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -42,7 +39,6 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -52,15 +48,24 @@ import com.example.android.mediasession.service.MusicService;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_ALBUM;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_ALBUM_ART_RES_ID;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_ALBUM_ART_RES_NAME;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_ARTIST;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_DURATION;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_DURATION_UNIT;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_GENRE;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_MUSIC_FILENAME;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_TITRE;
+import static com.example.android.mediasession.ui.BaseDonnee.KEY_URI_STRING;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -69,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mArtistTextView;
     private ImageView mMediaControlsImage;
     private MediaSeekBar mSeekBarAudio;
+    private BaseDonnee  musicDatabase;
 
     private MediaBrowserHelper mMediaBrowserHelper;
 
@@ -97,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button_next).setOnClickListener(clickListener);
 
         createMusicFolder(MUSIC_FOLDER_NAME);
+        createDataBase(this);
         initialiseMusicLibrary();
 
         mMediaBrowserHelper = new MediaBrowserConnection(this);
@@ -146,26 +153,69 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    
+
+    /**
+     * Création de la base de donnée, si absente de l'appareil, on l'initialise avec toutes les chansons trouvées dans l'appareil également
+     */
+    private void createDataBase(Context context) {
+
+        musicDatabase = new BaseDonnee(this);
+
+        if (!(BaseDonnee.doesDatabaseExist(this))) {
+            initialiseDataBase();
+        } else {
+            Log.i("MAINACTIVITY", "createDataBase: base de donnée déjà existante.");
+        }
+    }
+
     /**
      * Récupère les musiques de l'appareille et les ajoute à la MusicLibrary.
      */
     private void initialiseMusicLibrary() {
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
 
+        List<Integer> chansons = new ArrayList<Integer>();
+        chansons = musicDatabase.getAllChansons();
+        Cursor chansonPresente;
+        TimeUnit unit;
+
+        for (Integer chanson : chansons) {
+            chansonPresente = musicDatabase.getChanson(chanson);
+            Log.i("MAINACTIVITY1", "initialiseMusicLibrary: " + chansonPresente.toString());
+            unit = TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT)));
+            Log.i("MAINACTIVITY1", "initialiseMusicLibrary: 2");
+
+            MusicLibrary.createMediaMetadataCompat(
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_URI_STRING)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_TITRE)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ARTIST)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_GENRE)),
+                    chansonPresente.getLong(chansonPresente.getColumnIndex(KEY_DURATION)),
+                    TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT))),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_MUSIC_FILENAME)),
+                    chansonPresente.getInt(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_ID)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_NAME)));
+        }
+    }
+
+    /**
+     * Crée les entrées dans la BD seulement à la création.
+     */
+    private void initialiseDataBase() {
+
+        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
         ContentResolver cResolver = getContentResolver();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        boolean isSuccessful = false;
+
         Cursor cursor = cResolver.query(uri, null, selection, null, null);
+
         if (cursor == null) {
             throw new RuntimeException("cannot access MediaStore");
         } else if (!cursor.moveToFirst()) {
-            // no medias
+            Log.i("MAINACTIVITY", "initialiseDataBase: aucune chanson. elseif(!cursor.moveToFirst()");
         } else {
             int idColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
-            //int titleColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media.TITLE);
-            //int artistColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST);
-            //int albumColumn = cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
-            //int durationColumn = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
 
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
 
@@ -173,9 +223,13 @@ public class MainActivity extends AppCompatActivity {
                 long thisId = cursor.getLong(idColumn);
                 Uri contentUri = ContentUris.withAppendedId(
                         android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, thisId);
-                mmr.setDataSource(this, contentUri);
 
-                MusicLibrary.createMediaMetadataCompat(
+                try {
+                    mmr.setDataSource(this, contentUri);
+                } catch (Exception e) {
+                    Log.i("MAINACTIVITY", "initialiseDataBase, mmr.setDataSource error " + e + ", " + contentUri.toString());
+                }
+                isSuccessful = musicDatabase.createChanson(
                         contentUri.toString(),
                         mmr.extractMetadata(mmr.METADATA_KEY_TITLE),
                         mmr.extractMetadata(mmr.METADATA_KEY_ARTIST),
@@ -187,12 +241,17 @@ public class MainActivity extends AppCompatActivity {
                                 )
                         ),
                         TimeUnit.SECONDS,
-                        contentUri.toString(),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)),
                         R.drawable.album_jazz_blues,
                         "album_jazz_blues"
                 );
 
-            } while (cursor.moveToNext());
+                if (isSuccessful) {
+                    Log.i("MAINACTIVITY", "initialiseDataBase: Chanson" + contentUri.toString() + " inserré avec succès.");
+                } else {
+                    Log.i("MAINACTIVITY", "initialiseDataBase: Chanson" + contentUri.toString() + ": incapabble de faire l'insertion initiale dans la BD.");
+                }
+            }while (cursor.moveToNext()) ;
         }
     }
 
