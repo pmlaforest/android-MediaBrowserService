@@ -22,4 +22,11 @@
     <string name="label_play_pause">Play and pause toggle</string>
     <string name="label_previous">Previous track</string>
     <string name="label_next">Next track</string>
+    <string name="body_msg">track#1</string>
+    <string name="header_msg">header message</string>
+    <string name="footer_msg">footer message</string>
+    <string name="search_msg">search by track, artist or album</string>
+    <string name="parameters_msg">parameters</string>
+    <string name="playlist_msg">playlist</string>
+    <string name="download_msg">download</string>
 </resources>
