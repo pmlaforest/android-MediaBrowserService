@@ -1,7 +1,5 @@
-package com.example.android.mediasession.ui;
+package com.example.android.mediasession.service.contentcatalogs;
 
-import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.File;
@@ -17,17 +15,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
-import android.media.MediaMetadataRetriever;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Log;
 
-import com.example.android.mediasession.R;
-import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
+public class MusicDatabase extends SQLiteOpenHelper {
 
-public class BaseDonnee extends SQLiteOpenHelper {
-
-    private static BaseDonnee database;
+    private static MusicDatabase database;
 
     private static final String LOG = "DATABASE";
     private static final int DATABASE_VERSION = 1;
@@ -65,7 +57,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
             + KEY_CREATED_AT + " DATETIME"
             + ")";
 
-    public BaseDonnee(Context context) {
+    public MusicDatabase(Context context) {
         super(context, DATABASE_NAME , null, 1);
         Log.i(LOG, "Database: " +  DATABASE_NAME + " cree.");
     }
@@ -95,7 +87,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
         return dbFile.exists();
     }
 
-    public boolean createChanson (String uriString, String titre, String artist, String album, String genre,long duration, TimeUnit timeunit, String musicFileName, int albumArtResId, String albumArtResName) {
+    public boolean createTrack(String uriString, String titre, String artist, String album, String genre, long duration, TimeUnit timeunit, String musicFileName, int albumArtResId, String albumArtResName) {
 
         //Remplisage des champs nulls
         if(titre == null)
@@ -108,7 +100,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
             genre = "Aucun informations";
 
         SQLiteDatabase db = this.getWritableDatabase();
-        Log.i(LOG, "createChanson, " + "database, " + db.toString());
+        Log.i(LOG, "createTrack, " + "database, " + db.toString());
         long result = -1;
 
         ContentValues contentValues = new ContentValues();
@@ -141,7 +133,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
     }
 
     //Retourne un curseur sur la chanson voulue
-    public Cursor getChanson(Integer musicID) {
+    public Cursor getTrack(Integer musicID) {
         SQLiteDatabase db = this.getReadableDatabase();
         String selectQuery = "SELECT  * FROM " + TABLE_CHANSON
                 + " WHERE " + KEY_ID + " = " + musicID;
@@ -155,7 +147,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
     }
 
     //Retournera une liste de integer de tous les id de chansons en bd.
-    public List<Integer> getAllChansons(){
+    public List<Integer> getAllTracks(){
 
         List<Integer> chansons = new ArrayList<Integer>();
         int currentID;
@@ -168,7 +160,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
         if (res.moveToFirst()) {
             do {
                 currentID = res.getInt(res.getColumnIndex(KEY_ID));
-                Log.i(LOG, "getAllChansons: " + currentID + " ajouté à la liste.");
+                Log.i(LOG, "getAllTracks: " + currentID + " ajouté à la liste.");
 
                 // adding to chansons list
                 chansons.add(currentID);
@@ -178,7 +170,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
         return chansons;
     }
 
-    public int nombreDeChansons(){
+    public int getNbOfTracks(){
         SQLiteDatabase db = this.getReadableDatabase();
         int numRows = (int) DatabaseUtils.queryNumEntries(db, TABLE_CHANSON);
         return numRows;
@@ -187,7 +179,7 @@ public class BaseDonnee extends SQLiteOpenHelper {
     /*
      * Update une chanson
      */
-    public int updateChanson(int id, String uriString, String titre, String artist, String album, String genre,long duration, TimeUnit timeunit, String musicFileName, int albumArtResId, String albumArtResName) {
+    public int updateTrack(int id, String uriString, String titre, String artist, String album, String genre, long duration, TimeUnit timeunit, String musicFileName, int albumArtResId, String albumArtResName) {
 
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -206,12 +198,12 @@ public class BaseDonnee extends SQLiteOpenHelper {
         contentValues.put(KEY_CREATED_AT, getDateTime());
 
         if(db.update(TABLE_CHANSON, contentValues, KEY_URI_STRING + " = ?", new String[]{uriString} ) == 1) {
-            Log.i(LOG, "updateChanson: " + uriString + ": update réussie.");
+            Log.i(LOG, "updateTrack: " + uriString + ": update réussie.");
             return 1;
         }
         else
         {
-            Log.i(LOG, "updateChanson: " + uriString + ": impossible d'appliquer l'update.");
+            Log.i(LOG, "updateTrack: " + uriString + ": impossible d'appliquer l'update.");
             return 0;
         }
     }

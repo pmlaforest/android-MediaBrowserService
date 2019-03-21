@@ -45,6 +45,7 @@ import android.widget.TextView;
 import com.example.android.mediasession.R;
 import com.example.android.mediasession.client.MediaBrowserHelper;
 import com.example.android.mediasession.service.MusicService;
+import com.example.android.mediasession.service.contentcatalogs.MusicDatabase;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 
 import java.io.File;
@@ -56,16 +57,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_ALBUM;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_ALBUM_ART_RES_ID;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_ALBUM_ART_RES_NAME;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_ARTIST;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_DURATION;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_DURATION_UNIT;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_GENRE;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_MUSIC_FILENAME;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_TITRE;
-import static com.example.android.mediasession.ui.BaseDonnee.KEY_URI_STRING;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_ALBUM;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_ALBUM_ART_RES_ID;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_ALBUM_ART_RES_NAME;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_ARTIST;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_DURATION;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_DURATION_UNIT;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_GENRE;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_MUSIC_FILENAME;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_TITRE;
+import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_URI_STRING;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mArtistTextView;
     private ImageView mMediaControlsImage;
     private MediaSeekBar mSeekBarAudio;
-    private BaseDonnee  musicDatabase;
+    private MusicDatabase musicDatabase;
 
     private MediaBrowserHelper mMediaBrowserHelper;
 
@@ -159,9 +160,9 @@ public class MainActivity extends AppCompatActivity {
      */
     private void createDataBase(Context context) {
 
-        musicDatabase = new BaseDonnee(this);
+        musicDatabase = new MusicDatabase(this);
 
-        if (!(BaseDonnee.doesDatabaseExist(this))) {
+        if (!(MusicDatabase.doesDatabaseExist(this))) {
             initialiseDataBase();
         } else {
             Log.i("MAINACTIVITY", "createDataBase: base de donnée déjà existante.");
@@ -174,12 +175,12 @@ public class MainActivity extends AppCompatActivity {
     private void initialiseMusicLibrary() {
 
         List<Integer> chansons = new ArrayList<Integer>();
-        chansons = musicDatabase.getAllChansons();
+        chansons = musicDatabase.getAllTracks();
         Cursor chansonPresente;
         TimeUnit unit;
 
         for (Integer chanson : chansons) {
-            chansonPresente = musicDatabase.getChanson(chanson);
+            chansonPresente = musicDatabase.getTrack(chanson);
             Log.i("MAINACTIVITY1", "initialiseMusicLibrary: " + chansonPresente.toString());
             unit = TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT)));
             Log.i("MAINACTIVITY1", "initialiseMusicLibrary: 2");
@@ -229,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Log.i("MAINACTIVITY", "initialiseDataBase, mmr.setDataSource error " + e + ", " + contentUri.toString());
                 }
-                isSuccessful = musicDatabase.createChanson(
+                isSuccessful = musicDatabase.createTrack(
                         contentUri.toString(),
                         mmr.extractMetadata(mmr.METADATA_KEY_TITLE),
                         mmr.extractMetadata(mmr.METADATA_KEY_ARTIST),
