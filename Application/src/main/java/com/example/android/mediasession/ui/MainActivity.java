@@ -53,6 +53,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -81,16 +84,15 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean mIsPlaying;
 
-    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
-    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
+    private String trackIdToPlay = null;
 
     private static final String MUSIC_FOLDER_NAME = "streamingapp_music";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
-        checkUserPermission();
 
         mTitleTextView = findViewById(R.id.song_title);
         mArtistTextView = findViewById(R.id.song_artist);
@@ -109,50 +111,12 @@ public class MainActivity extends AppCompatActivity {
 
         mMediaBrowserHelper = new MediaBrowserConnection(this);
         mMediaBrowserHelper.registerCallback(new MediaBrowserListener());
-    }
 
-    /**
-     * Vérifie les permissions nécessaire pour l'accès aux médias 
-     * (nécessaire pour API 22+) et les demandes à l'utilisateur au besoin.
-     */
-    private void checkUserPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                // Should we show an explanation?
-                if (shouldShowRequestPermissionRationale(
-                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    // Explain to the user why we need to read the contacts
-                }
-
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
-
-                // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-                // app-defined int constant that should be quite unique
-
-                return;
-            }
-            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                // Should we show an explanation?
-                if (shouldShowRequestPermissionRationale(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    // Explain to the user why we need to read the contacts
-                }
-
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-
-                // MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE is an
-                // app-defined int constant that should be quite unique
-
-                return;
-            }
+        Intent intent = getIntent();
+        trackIdToPlay = null;
+        if (intent != null) {
+            trackIdToPlay = intent.getStringExtra("mediaId");
         }
-
     }
 
     /**
@@ -377,8 +341,15 @@ public class MainActivity extends AppCompatActivity {
                 mediaController.addQueueItem(mediaItem.getDescription());
             }
 
-            // Call prepare now so pressing play just works.
-            mediaController.getTransportControls().prepare();
+            if (trackIdToPlay != null) {
+                if (mIsPlaying) {
+                    mMediaBrowserHelper.getTransportControls().pause();
+                }
+                mediaController.getTransportControls().prepareFromMediaId(trackIdToPlay,null);
+            }
+            else {
+                mediaController.getTransportControls().prepare();
+            }
         }
     }
 

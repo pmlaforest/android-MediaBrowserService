@@ -44,13 +44,14 @@
                 android:layout_weight="1">
 
                 <ImageButton
-                    android:id="@+id/imageButton"
+                    android:id="@+id/download_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_skip_previous_white_24dp" />
 
                 <TextView
+                    android:id="@+id/download_textView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="15dp"
@@ -65,13 +66,14 @@
                 android:layout_weight="1">
 
                 <ImageButton
-                    android:id="@+id/imageButton2"
+                    android:id="@+id/playlist_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_stat_image_audiotrack" />
 
                 <TextView
+                    android:id="@+id/playlist_textView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="15dp"
@@ -87,18 +89,42 @@
                 android:layout_weight="1">
 
                 <ImageButton
-                    android:id="@+id/imageButton3"
+                    android:id="@+id/parameters_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:src="@drawable/ic_skip_next_white_24dp" />
 
                 <TextView
+                    android:id="@+id/parameters_textView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="15dp"
                     android:layout_gravity="center"
                     android:text="@string/parameters_msg" />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <ImageButton
+                    android:id="@+id/mediaPlayer_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_skip_next_white_24dp" />
+
+                <TextView
+                    android:id="@+id/mediaPlayer_textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="15dp"
+                    android:layout_gravity="center"
+                    android:text="@string/mediaPlayer_msg" />
             </LinearLayout>
 
         </LinearLayout>
@@ -112,54 +138,9 @@
         android:fillViewport="true">
 
         <TableLayout
+            android:id="@+id/table1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-                <TextView
-                    android:id="@+id/textView17"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:lines="2"
-                    android:textSize="20dp"
-                    android:text="Track#1\nArtist#1" />
-            </TableRow>
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-                <TextView
-                    android:id="@+id/textView18"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:lines="2"
-                    android:textSize="20dp"
-                    android:text="Track#2\nArtist#2" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-                <TextView
-                    android:id="@+id/textView19"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:lines="2"
-                    android:textSize="20dp"
-                    android:text="Track#3\nArtist#3" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-                <TextView
-                    android:id="@+id/textView21"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:lines="2"
-                    android:textSize="20dp"
-                    android:text="Track#4\nArtist#4" />
-            </TableRow>
         </TableLayout>
     </ScrollView>
 </RelativeLayout>

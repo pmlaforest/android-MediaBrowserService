@@ -29,4 +29,5 @@
     <string name="parameters_msg">parameters</string>
     <string name="playlist_msg">playlist</string>
     <string name="download_msg">download</string>
+    <string name="mediaPlayer_msg">media Player</string>
 </resources>
