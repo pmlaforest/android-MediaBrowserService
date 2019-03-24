@@ -76,11 +76,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected void onSaveInstanceState(Bundle icicle) {
-        super.onSaveInstanceState(icicle);
-        icicle.putString("mediaId", trackIdToPlay);
-    }
-
     @Override
     public void onStart() {
         super.onStart();

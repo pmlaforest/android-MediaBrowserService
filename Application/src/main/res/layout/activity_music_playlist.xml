@@ -48,7 +48,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_skip_previous_white_24dp" />
+                    android:background="#0000"
+                    android:src="@drawable/baseline_get_app_black_24dp" />
 
                 <TextView
                     android:id="@+id/download_textView"
@@ -70,7 +71,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_stat_image_audiotrack" />
+                    android:background="#0000"
+                    android:src="@drawable/baseline_queue_music_black_24dp" />
 
                 <TextView
                     android:id="@+id/playlist_textView"
@@ -93,7 +95,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_skip_next_white_24dp" />
+                    android:background="#0000"
+                    android:src="@drawable/baseline_settings_black_24dp" />
 
                 <TextView
                     android:id="@+id/parameters_textView"
@@ -116,7 +119,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:src="@drawable/ic_skip_next_white_24dp" />
+                    android:background="#0000"
+                    android:src="@drawable/baseline_music_video_black_24dp" />
 
                 <TextView
                     android:id="@+id/mediaPlayer_textView"

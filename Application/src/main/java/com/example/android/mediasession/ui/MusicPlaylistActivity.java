@@ -93,7 +93,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
 
                 String artist = "unknown";
                 if (desc.getSubtitle().toString() != null) {
-                    artist = desc.getTitle().toString();
+                    artist = desc.getSubtitle().toString();
                 }
 
                 createTrackEntry(title, artist, desc.getMediaId());
@@ -260,7 +260,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT));
 
-        newRow.setBackground(getResources().getDrawable(R.drawable.cell_shape));
+        newRow.setBackground(getResources().getDrawable(R.drawable.table_row_bg));
         newRow.setOnClickListener(this);
         newRow.setTag(mediaId);
 
