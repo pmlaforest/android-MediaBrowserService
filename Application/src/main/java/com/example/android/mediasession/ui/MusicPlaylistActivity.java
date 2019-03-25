@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.graphics.Typeface;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
@@ -18,6 +19,7 @@ import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -77,28 +79,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         mediaItems =  MusicLibrary.getMediaItems();
 
         setFooterElementsOnClickListener();
-
-        for(MediaBrowserCompat.MediaItem item : mediaItems) {
-            MediaDescriptionCompat desc = item.getDescription();
-            if (desc.getDescription() != null) {
-
-                if (desc.getMediaId() == null) {
-                    continue;
-                }
-
-                String title = "unknown";
-                if (desc.getTitle().toString() != null) {
-                    title = desc.getTitle().toString();
-                }
-
-                String artist = "unknown";
-                if (desc.getSubtitle().toString() != null) {
-                    artist = desc.getSubtitle().toString();
-                }
-
-                createTrackEntry(title, artist, desc.getMediaId());
-            }
-        }
+        createListOfTracks();
     }
 
     /**
@@ -237,35 +218,91 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         ImageButton mediaPlayerImageButton = (ImageButton) findViewById(R.id.mediaPlayer_button);
         mediaPlayerTextView.setOnClickListener(this);
         mediaPlayerImageButton.setOnClickListener(this);
-
     }
 
+    private void createListOfTracks() {
 
-    private void createTrackEntry(String trackName, String author, String mediaId) {
+        for(MediaBrowserCompat.MediaItem item : mediaItems) {
+            MediaDescriptionCompat desc = item.getDescription();
+            if (desc.getDescription() != null) {
 
-        TableLayout table = findViewById(R.id.table1);
+                if (desc.getMediaId() == null) {
+                    continue;
+                }
+
+                String title = "unknown";
+                if (desc.getTitle().toString() != null) {
+                    title = desc.getTitle().toString();
+                }
+
+                String artist = "unknown";
+                if (desc.getSubtitle().toString() != null) {
+                    artist = desc.getSubtitle().toString();
+                }
+
+                TableLayout table = findViewById(R.id.table1);
+                TableRow newRow = createTrackEntry(title, artist, desc.getMediaId());
+                table.addView(newRow);
+            }
+        }
+    }
+
+    private TableRow createTrackEntry(String trackName, String author, String mediaId) {
 
         TableRow newRow = new TableRow(this);
 
-        newRow.setLayoutParams(new TableLayout.LayoutParams(
-                TableLayout.LayoutParams.MATCH_PARENT,
-                TableLayout.LayoutParams.MATCH_PARENT));
-
-        TextView newText = new TextView(this);
-        String trackInfo = trackName + "\n" + author;
-        newText.setText(trackInfo);
-        newText.setTextSize(16);
-
-        newRow.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT));
+        TableRow.LayoutParams tlparams = new TableRow.LayoutParams(
+                TableRow.LayoutParams.WRAP_CONTENT,
+                TableRow.LayoutParams.WRAP_CONTENT);
 
         newRow.setBackground(getResources().getDrawable(R.drawable.table_row_bg));
         newRow.setOnClickListener(this);
         newRow.setTag(mediaId);
 
-        newRow.addView(newText);
-        table.addView(newRow);
+        LinearLayout newLayout = new LinearLayout(this);
+        newLayout.setOrientation(LinearLayout.VERTICAL);
+
+        newLayout.setLayoutParams(tlparams);
+
+        TextView trackNameTextView = new TextView(this);
+        trackNameTextView.setText(trackName);
+        trackNameTextView.setTextSize(16);
+        trackNameTextView.setTypeface(null, Typeface.BOLD);
+
+        TextView artistTextView = new TextView(this);
+        artistTextView.setText(author);
+        artistTextView.setTextSize(16);
+        artistTextView.setTypeface(null, Typeface.ITALIC);
+
+        Uri uri = Uri.parse(mediaId);
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(this, uri);
+        String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        int durationMillSeconds = Integer.parseInt(durationStr);
+
+        String formattedDurationStr = String.format("%d:%d",
+                TimeUnit.MILLISECONDS.toMinutes(durationMillSeconds),
+                TimeUnit.MILLISECONDS.toSeconds(durationMillSeconds) -
+                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillSeconds)));
+
+        TextView durationTextView = new TextView(this);
+        durationTextView.setText(formattedDurationStr);
+        durationTextView.setTextSize(16);
+        durationTextView.setGravity(Gravity.RIGHT);
+        durationTextView.setPadding(0,0,5,0);
+
+        durationTextView.setLayoutParams(tlparams);
+        TableRow.LayoutParams params2 = (TableRow.LayoutParams) durationTextView.getLayoutParams();
+        params2.rightMargin = 50;
+        params2.gravity = Gravity.CENTER_VERTICAL;
+        durationTextView.setLayoutParams(params2);
+
+        newLayout.addView(trackNameTextView);
+        newLayout.addView(artistTextView);
+        newRow.addView(newLayout);
+        newRow.addView(durationTextView);
+
+        return newRow;
     }
 
     public void onClick(View view)
