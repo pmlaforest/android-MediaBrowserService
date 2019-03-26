@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private MediaBrowserHelper mMediaBrowserHelper;
     private boolean mIsPlaying;
     private String trackIdToPlay = null;
+    private boolean firstTimePlaying = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,14 +138,9 @@ public class MainActivity extends AppCompatActivity {
 
             final MediaControllerCompat mediaController = getMediaController();
 
-            // Queue up all media items for this simple sample.
-            for (final MediaBrowserCompat.MediaItem mediaItem : children) {
-                mediaController.addQueueItem(mediaItem.getDescription());
-            }
-
             if (mIsPlaying) {
                 if (trackIdToPlay != null) {
-                    mMediaBrowserHelper.getTransportControls().pause();
+                    mMediaBrowserHelper.getTransportControls().stop();
                 }
                 else {
                     MediaMetadataCompat metadata = mediaController.getMetadata();
@@ -154,6 +150,14 @@ public class MainActivity extends AppCompatActivity {
             }
             else {
                 if (trackIdToPlay != null) {
+
+                    if (firstTimePlaying) {
+                        // Queue up all media items for this simple sample.
+                        for (final MediaBrowserCompat.MediaItem mediaItem : children) {
+                            mediaController.addQueueItem(mediaItem.getDescription());
+                            firstTimePlaying = false;
+                        }
+                    }
                     mediaController.getTransportControls().prepareFromMediaId(trackIdToPlay,null);
                 }
                 else {
