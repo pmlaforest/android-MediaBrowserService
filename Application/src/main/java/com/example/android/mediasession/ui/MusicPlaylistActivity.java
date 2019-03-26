@@ -280,10 +280,17 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         int durationMillSeconds = Integer.parseInt(durationStr);
 
-        String formattedDurationStr = String.format("%d:%d",
-                TimeUnit.MILLISECONDS.toMinutes(durationMillSeconds),
-                TimeUnit.MILLISECONDS.toSeconds(durationMillSeconds) -
-                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(durationMillSeconds)));
+        int seconds = (int) (durationMillSeconds / 1000) % 60 ;
+        int minutes = (int) ((durationMillSeconds / (1000*60)) % 60);
+        int hours   = (int) ((durationMillSeconds / (1000*60*60)));
+
+        String formattedDurationStr = null;
+        if (hours == 0) {
+            formattedDurationStr = String.format("%d:%02d", minutes, seconds);
+        }
+        else {
+            formattedDurationStr = String.format("%d:%02d:%02d", hours, minutes, seconds);
+        }
 
         TextView durationTextView = new TextView(this);
         durationTextView.setText(formattedDurationStr);
