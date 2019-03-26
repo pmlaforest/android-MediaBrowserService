@@ -85,6 +85,9 @@ public final class MediaPlayerAdapter extends PlayerAdapter {
     public void playFromMedia(MediaMetadataCompat metadata) {
         mCurrentMedia = metadata;
         final String mediaId = metadata.getDescription().getMediaId();
+        // mediaId est maintenant un Uri que l'on utilise pour accéder
+        // au fichier de musique.
+        ///playFile(MusicLibrary.getMusicFilename(mediaId));
         playFile(mediaId);
     }
 
@@ -115,12 +118,23 @@ public final class MediaPlayerAdapter extends PlayerAdapter {
         initializeMediaPlayer();
 
         // Utilise le mediaId (un Uri) du MusicLibrary pour récupérer la
-        // musique. On n'est plus limité au dossier Assets.
+        // musique.
         try {
             mMediaPlayer.setDataSource(this.mContext, Uri.parse(mFilename));
         } catch (Exception e) {
             throw new RuntimeException("Failed to open file: " + mFilename, e);
         }
+
+        // On n'est plus limité au dossier Assets.
+        /*try {
+            AssetFileDescriptor assetFileDescriptor = mContext.getAssets().openFd(mFilename);
+            mMediaPlayer.setDataSource(
+                    assetFileDescriptor.getFileDescriptor(),
+                    assetFileDescriptor.getStartOffset(),
+                    assetFileDescriptor.getLength());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to open file: " + mFilename, e);
+        }*/
 
         try {
             mMediaPlayer.prepare();
