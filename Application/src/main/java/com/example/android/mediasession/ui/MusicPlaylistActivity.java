@@ -33,6 +33,7 @@ import android.widget.TextView;
 import com.example.android.R;
 import com.example.android.mediasession.service.contentcatalogs.MusicDatabase;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
+import com.example.android.wifip2p.WiFiDirectActivity;
 
 import org.w3c.dom.Text;
 
@@ -316,6 +317,8 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
 
         switch(view.getId()){
             case R.id.download_button:
+                startActivity(new Intent(this, WiFiDirectActivity.class));
+                break;
             case R.id.download_textView:
                 break;
             case R.id.parameters_button:
