@@ -30,7 +30,7 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import com.example.android.mediasession.R;
+import com.example.android.R;
 import com.example.android.mediasession.service.contentcatalogs.MusicDatabase;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 

@@ -22,6 +22,7 @@ import com.example.android.R;
 import com.example.android.mediasession.client.MediaBrowserHelper;
 import com.example.android.mediasession.service.MusicService;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
+import com.example.android.wifip2p.WiFiDirectActivity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +34,9 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -72,6 +76,27 @@ public class MainActivity extends AppCompatActivity {
         trackIdToPlay = null;
         if (intent != null) {
             trackIdToPlay = intent.getStringExtra("mediaId");
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        try {
+            getMenuInflater().inflate(R.menu.main_menu, menu);
+        }catch (Exception e){
+            Log.e("JavaInfo","Error MainActivity_onCreateOptionsMenu(): " + e);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.shortcut_wifip2p:
+                startActivity(new Intent(MainActivity.this, WiFiDirectActivity.class));
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 
