@@ -125,7 +125,24 @@ public class MusicService extends MediaBrowserServiceCompat {
             mPreparedMedia = MusicLibrary.getMetadata(MusicService.this, mediaId);
             mSession.setMetadata(mPreparedMedia);
 
-            if (!mSession.isActive()) {
+            if (!mSession.isActive()
+            ) {
+                mSession.setActive(true);
+            }
+        }
+
+        public void onPrepareFromMediaId(String mediaId, Bundle extras) {
+
+            if (mQueueIndex < 0 && mPlaylist.isEmpty()) {
+                // Nothing to play.
+                return;
+            }
+
+            mPreparedMedia = MusicLibrary.getMetadata(MusicService.this, mediaId);
+            mSession.setMetadata(mPreparedMedia);
+
+            if (!mSession.isActive()
+            ) {
                 mSession.setActive(true);
             }
         }
