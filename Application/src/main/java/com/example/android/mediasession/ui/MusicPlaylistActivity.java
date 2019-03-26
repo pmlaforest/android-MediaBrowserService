@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -43,7 +44,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.android.mediasession.service.contentcatalogs.MusicDatabase.KEY_ALBUM;
@@ -61,7 +65,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
 
     private static final String MUSIC_FOLDER_NAME = "streamingapp_music";
 
-    private List<MediaBrowserCompat.MediaItem> mediaItems;
+
 
     private MusicDatabase musicDatabase;
 
@@ -78,7 +82,6 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         createMusicFolder(MUSIC_FOLDER_NAME);
         createDataBase(this);
         initialiseMusicLibrary();
-        mediaItems =  MusicLibrary.getMediaItems();
 
         setFooterElementsOnClickListener();
         createListOfTracks();
@@ -224,6 +227,9 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
 
     private void createListOfTracks() {
 
+        List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<MediaBrowserCompat.MediaItem>();
+        mediaItems =  MusicLibrary.getMediaItems();
+
         for(MediaBrowserCompat.MediaItem item : mediaItems) {
             MediaDescriptionCompat desc = item.getDescription();
             if (desc.getDescription() != null) {
@@ -250,6 +256,8 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                 table.addView(newRow);
             }
         }
+        // Maybe the garbage collector will reclaim this memory ?
+        mediaItems = null;
     }
 
     private TableRow createTrackEntry(String trackName, String author, int duration, String mediaId) {
