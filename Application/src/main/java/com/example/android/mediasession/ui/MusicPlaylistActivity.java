@@ -16,6 +16,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -240,14 +241,17 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                     artist = desc.getSubtitle().toString();
                 }
 
+                MediaMetadataCompat currentMetadata = MusicLibrary.getMetadata(this,item.getMediaId());
+                int duration = (int) currentMetadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+                
                 TableLayout table = findViewById(R.id.table1);
-                TableRow newRow = createTrackEntry(title, artist, desc.getMediaId());
+                TableRow newRow = createTrackEntry(title, artist, duration, desc.getMediaId());
                 table.addView(newRow);
             }
         }
     }
 
-    private TableRow createTrackEntry(String trackName, String author, String mediaId) {
+    private TableRow createTrackEntry(String trackName, String author, int duration, String mediaId) {
 
         TableRow newRow = new TableRow(this);
 
@@ -274,15 +278,9 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         artistTextView.setTextSize(16);
         artistTextView.setTypeface(null, Typeface.ITALIC);
 
-        Uri uri = Uri.parse(mediaId);
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(this, uri);
-        String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        int durationMillSeconds = Integer.parseInt(durationStr);
-
-        int seconds = (int) (durationMillSeconds / 1000) % 60 ;
-        int minutes = (int) ((durationMillSeconds / (1000*60)) % 60);
-        int hours   = (int) ((durationMillSeconds / (1000*60*60)));
+        int seconds = (int) (duration / 1000) % 60 ;
+        int minutes = (int) ((duration / (1000*60)) % 60);
+        int hours   = (int) ((duration / (1000*60*60)));
 
         String formattedDurationStr = null;
         if (hours == 0) {
