@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
     private MediaBrowserHelper mMediaBrowserHelper;
     private boolean mIsPlaying;
     private String trackIdToPlay = null;
-    private boolean firstTimePlaying = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -229,11 +228,10 @@ public class MainActivity extends AppCompatActivity {
             else {
                 if (trackIdToPlay != null) {
 
-                    if (firstTimePlaying) {
+                    if (getMediaController().getPlaybackState() == null) {
                         // Queue up all media items for this simple sample.
                         for (final MediaBrowserCompat.MediaItem mediaItem : children) {
                             mediaController.addQueueItem(mediaItem.getDescription());
-                            firstTimePlaying = false;
                         }
                     }
                     mediaController.getTransportControls().prepareFromMediaId(trackIdToPlay,null);
