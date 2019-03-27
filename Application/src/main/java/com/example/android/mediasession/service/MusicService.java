@@ -92,8 +92,12 @@ public class MusicService extends MediaBrowserServiceCompat {
             @NonNull final String parentMediaId,
             @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
         //TODO remplacer par plusieurs chargements partiels, AsyncTask? À voir.
-        result.sendResult(MusicLibrary.getMediaItems().subList(0,30));
-
+        List<MediaBrowserCompat.MediaItem> items = MusicLibrary.getMediaItems();
+        if (items.size() > 30) {
+            result.sendResult(items.subList(0,30));
+        } else {
+            result.sendResult(items);
+        }
     }
 
     // MediaSession Callback: Transport Controls -> MediaPlayerAdapter
