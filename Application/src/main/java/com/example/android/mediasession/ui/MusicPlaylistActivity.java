@@ -320,6 +320,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                 startActivity(new Intent(this, WiFiDirectActivity.class));
                 break;
             case R.id.download_textView:
+                startActivity(new Intent(this, WiFiDirectActivity.class));
                 break;
             case R.id.parameters_button:
             case R.id.parameters_textView:
@@ -328,6 +329,9 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
             case R.id.playlist_textView:
                 break;
             case R.id.mediaPlayer_button:
+                intent = new Intent(this, MainActivity.class);
+                startActivity(intent);
+                break;
             case R.id.mediaPlayer_textView:
                 intent = new Intent(this, MainActivity.class);
                 startActivity(intent);
