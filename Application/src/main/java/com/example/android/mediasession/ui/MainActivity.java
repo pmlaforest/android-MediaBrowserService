@@ -42,6 +42,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.android.mediasession.R;
+import com.example.android.mediasession.client.MediaBrowserHelper;
+import com.example.android.mediasession.service.MusicService;
+import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
+
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
 
     private ImageView mAlbumArt;
