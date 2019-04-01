@@ -75,11 +75,23 @@ public class MainActivity extends AppCompatActivity {
         mMediaBrowserHelper = new MediaBrowserConnection(this);
         mMediaBrowserHelper.registerCallback(new MediaBrowserListener());
 
-        Intent intent = getIntent();
         trackIdToPlay = null;
+        Intent intent = getIntent();
+        if (savedInstanceState != null) {
+            trackIdToPlay = savedInstanceState.getString("trackIdToPlay");
+        }
+
         if (intent != null) {
             trackIdToPlay = intent.getStringExtra("mediaId");
         }
+
+
+    }
+
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putString("trackIdToPlay", trackIdToPlay);
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     @Override
