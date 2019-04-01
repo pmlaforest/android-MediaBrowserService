@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.Typeface;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -65,26 +66,31 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
 
     private static final String MUSIC_FOLDER_NAME = "streamingapp_music";
 
-
-
     private MusicDatabase musicDatabase;
 
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2;
 
+    private static final int MY_PERMISSIONS_ALL = 3;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_music_playlist);
 
         checkUserPermission();
+
+        setContentView(R.layout.activity_music_playlist);
 
         createMusicFolder(MUSIC_FOLDER_NAME);
         createDataBase(this);
         initialiseMusicLibrary();
 
         setFooterElementsOnClickListener();
+        //new LongOperation().execute("");
+        long start = System.currentTimeMillis();
         createListOfTracks();
+        long elapsedTimeMillis = System.currentTimeMillis()-start;
+        Log.d("time",Long.toString(elapsedTimeMillis));
     }
 
     /**
@@ -106,43 +112,16 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
      * (nécessaire pour API 22+) et les demandes à l'utilisateur au besoin.
      */
     private void checkUserPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            if ((checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) || (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED)) {
 
-                // Should we show an explanation?
-                if (shouldShowRequestPermissionRationale(
-                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                    // Explain to the user why we need to read the contacts
-                }
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_ALL);
 
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
-
-                // MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE is an
-                // app-defined int constant that should be quite unique
-
-                return;
-            }
-            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-
-                // Should we show an explanation?
-                if (shouldShowRequestPermissionRationale(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    // Explain to the user why we need to read the contacts
-                }
-
-                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
-
-                // MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE is an
-                // app-defined int constant that should be quite unique
-
-                return;
             }
         }
-
     }
 
     /**
@@ -248,11 +227,13 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                     artist = desc.getSubtitle().toString();
                 }
 
-                MediaMetadataCompat currentMetadata = MusicLibrary.getMetadata(this,item.getMediaId());
-                int duration = (int) currentMetadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+                // Theses two lines take too much time to execute ... app. 6.5 seconds for the whole MusicLibrary.
+                // DURATION HAS BEEN HARDCODED TO 0 until a suitable solution is found
+                //MediaMetadataCompat currentMetadata = MusicLibrary.getMetadata(this,item.getMediaId());
+                //int duration = (int) currentMetadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
                 
                 TableLayout table = findViewById(R.id.table1);
-                TableRow newRow = createTrackEntry(title, artist, duration, desc.getMediaId());
+                TableRow newRow = createTrackEntry(title, artist, 0, desc.getMediaId());
                 table.addView(newRow);
             }
         }

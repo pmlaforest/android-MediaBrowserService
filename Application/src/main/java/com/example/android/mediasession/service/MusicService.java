@@ -175,6 +175,21 @@ public class MusicService extends MediaBrowserServiceCompat {
         }
 
         @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            if (!isReadyToPlay()) {
+                // Nothing to play.
+                return;
+            }
+
+            if (mPreparedMedia == null) {
+                onPrepareFromMediaId(mediaId, extras);
+            }
+
+            mPlayback.playFromMedia(mPreparedMedia);
+            Log.d(TAG, "onPlayFromMediaId: MediaSession active");
+        }
+
+        @Override
         public void onPause() {
             mPlayback.pause();
         }

@@ -123,7 +123,11 @@ public class MediaSeekBar extends AppCompatSeekBar {
             // way to do that is to create a ValueAnimator to update it so the bar reaches
             // the end of the media the same time as playback gets there (or close enough).
             if (state != null && state.getState() == PlaybackStateCompat.STATE_PLAYING) {
-                final int timeToEnd = (int) ((getMax() - progress) / state.getPlaybackSpeed());
+                int timeToEnd = (int) ((getMax() - progress) / state.getPlaybackSpeed());
+
+                if (timeToEnd < 0) {
+                    timeToEnd = 0;
+                }
 
                 mProgressAnimator = ValueAnimator.ofInt(progress, getMax())
                         .setDuration(timeToEnd);
