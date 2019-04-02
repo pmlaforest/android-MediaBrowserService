@@ -42,6 +42,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+
 public class MainActivity extends AppCompatActivity {
 
     private ImageView mAlbumArt;
@@ -75,11 +76,21 @@ public class MainActivity extends AppCompatActivity {
         mMediaBrowserHelper = new MediaBrowserConnection(this);
         mMediaBrowserHelper.registerCallback(new MediaBrowserListener());
 
-        Intent intent = getIntent();
         trackIdToPlay = null;
+        Intent intent = getIntent();
+
         if (intent != null) {
             trackIdToPlay = intent.getStringExtra("mediaId");
         }
+        if (savedInstanceState != null) {
+            trackIdToPlay = savedInstanceState.getString("trackIdToPlay");
+        }
+    }
+
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putString("trackIdToPlay", trackIdToPlay);
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     @Override
@@ -184,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                     if (mIsPlaying) {
                         mMediaBrowserHelper.getTransportControls().pause();
                     } else {
-                        mMediaBrowserHelper.getTransportControls().play();
+                            mMediaBrowserHelper.getTransportControls().play();
                     }
                     break;
                 case R.id.button_next:
@@ -215,22 +226,28 @@ public class MainActivity extends AppCompatActivity {
 
             final MediaControllerCompat mediaController = getMediaController();
 
-            // Queue up all media items for this simple sample.
-            for (final MediaBrowserCompat.MediaItem mediaItem : children) {
-                mediaController.addQueueItem(mediaItem.getDescription());
-            }
-
             if (mIsPlaying) {
-                if (trackIdToPlay != null) {
-                    mMediaBrowserHelper.getTransportControls().pause();
+
+                MediaMetadataCompat currentMetaData = mediaController.getMetadata();
+                String currentMediaId = currentMetaData.getDescription().getMediaId();
+
+                if (trackIdToPlay != null && !currentMediaId.equals(trackIdToPlay)) {
+                    mMediaBrowserHelper.getTransportControls().stop();
                 }
                 else {
-                    MediaMetadataCompat metadata = mediaController.getMetadata();
-                    trackIdToPlay = metadata.getDescription().getMediaId();
+                    trackIdToPlay = currentMediaId;
                 }
                 mediaController.getTransportControls().prepareFromMediaId(trackIdToPlay,null);
             }
             else {
+
+                if (getMediaController().getPlaybackState() == null) {
+                    // Queue up all media items for this simple sample.
+                    for (final MediaBrowserCompat.MediaItem mediaItem : children) {
+                        mediaController.addQueueItem(mediaItem.getDescription());
+                    }
+                }
+
                 if (trackIdToPlay != null) {
                     mediaController.getTransportControls().prepareFromMediaId(trackIdToPlay,null);
                 }
