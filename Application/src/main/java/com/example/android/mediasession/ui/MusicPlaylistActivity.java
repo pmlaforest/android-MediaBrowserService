@@ -89,8 +89,8 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         //new LongOperation().execute("");
         long start = System.currentTimeMillis();
         createListOfTracks();
-        long elapsedTimeMillis = System.currentTimeMillis()-start;
-        Log.d("time",Long.toString(elapsedTimeMillis));
+        long elapsedTimeMillis = System.currentTimeMillis() - start;
+        Log.d("time", Long.toString(elapsedTimeMillis));
     }
 
     /**
@@ -177,7 +177,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                 } else {
                     Log.i("MAINACTIVITY", "initialiseDataBase: Chanson" + contentUri.toString() + ": incapabble de faire l'insertion initiale dans la BD.");
                 }
-            }while (cursor.moveToNext()) ;
+            } while (cursor.moveToNext());
         }
     }
 
@@ -205,7 +205,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
     }
 
     private void createListOfTracks() {
-
+        /*
         List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<MediaBrowserCompat.MediaItem>();
         mediaItems =  MusicLibrary.getMediaItems();
 
@@ -223,6 +223,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                 }
 
                 String artist = "unknown";
+                item.getDescription()
                 if (desc.getSubtitle().toString() != null) {
                     artist = desc.getSubtitle().toString();
                 }
@@ -239,6 +240,34 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         }
         // Maybe the garbage collector will reclaim this memory ?
         mediaItems = null;
+
+        */
+
+        TableLayout table = findViewById(R.id.table1);
+
+        for (String key : MusicLibrary.keySet()) {
+
+            MediaMetadataCompat mmc = MusicLibrary.getMetadataWithoutBitmap(key);
+            String mediaId = mmc.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+            if (mediaId == null) {
+                continue;
+            }
+            String title = mmc.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+            if (title == null) {
+                title = "unknown";
+            }
+            String artist = mmc.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+            if (artist == null) {
+                artist = "unknown";
+            }
+            long duration = mmc.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+            if (duration == 0L) {
+                //do something?
+            }
+
+            TableRow newRow = createTrackEntry(title, artist, (int) duration, mediaId);
+            table.addView(newRow);
+        }
     }
 
     private TableRow createTrackEntry(String trackName, String author, int duration, String mediaId) {
@@ -268,15 +297,14 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         artistTextView.setTextSize(16);
         artistTextView.setTypeface(null, Typeface.ITALIC);
 
-        int seconds = (int) (duration / 1000) % 60 ;
-        int minutes = (int) ((duration / (1000*60)) % 60);
-        int hours   = (int) ((duration / (1000*60*60)));
+        int seconds = (int) (duration / 1000) % 60;
+        int minutes = (int) ((duration / (1000 * 60)) % 60);
+        int hours = (int) ((duration / (1000 * 60 * 60)));
 
         String formattedDurationStr = null;
         if (hours == 0) {
             formattedDurationStr = String.format("%d:%02d", minutes, seconds);
-        }
-        else {
+        } else {
             formattedDurationStr = String.format("%d:%02d:%02d", hours, minutes, seconds);
         }
 
@@ -284,7 +312,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         durationTextView.setText(formattedDurationStr);
         durationTextView.setTextSize(16);
         durationTextView.setGravity(Gravity.RIGHT);
-        durationTextView.setPadding(0,0,5,0);
+        durationTextView.setPadding(0, 0, 5, 0);
 
         durationTextView.setLayoutParams(tlparams);
         TableRow.LayoutParams params2 = (TableRow.LayoutParams) durationTextView.getLayoutParams();
@@ -300,11 +328,10 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         return newRow;
     }
 
-    public void onClick(View view)
-    {
+    public void onClick(View view) {
         Intent intent = null;
 
-        switch(view.getId()){
+        switch (view.getId()) {
             case R.id.download_button:
                 startActivity(new Intent(this, WiFiDirectActivity.class));
                 break;
@@ -328,7 +355,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
             default:
                 // This is a tableRow
                 intent = new Intent(this, MainActivity.class);
-                intent.putExtra("mediaId", (String)view.getTag());
+                intent.putExtra("mediaId", (String) view.getTag());
                 startActivity(intent);
                 break;
         }
@@ -340,7 +367,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SecurityException se) {
-            Log.d("user permission:",  "file creation denied");
+            Log.d("user permission:", "file creation denied");
         }
 
         AssetFileDescriptor sampleFileFd = null;
@@ -397,28 +424,26 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
      */
     private void initialiseMusicLibrary() {
 
-        List<Integer> chansons = new ArrayList<Integer>();
-        chansons = musicDatabase.getAllTracks();
-        Cursor chansonPresente;
-        TimeUnit unit;
+        if (MusicLibrary.isEmpty()) {
+            Cursor chansonPresente = musicDatabase.getAllTracks();
 
-        for (Integer chanson : chansons) {
-            chansonPresente = musicDatabase.getTrack(chanson);
-            Log.i("MAINACTIVITY1", "initialiseMusicLibrary: " + chansonPresente.toString());
-            unit = TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT)));
-            Log.i("MAINACTIVITY1", "initialiseMusicLibrary: 2");
-
-            MusicLibrary.createMediaMetadataCompat(
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_URI_STRING)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_TITRE)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ARTIST)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_GENRE)),
-                    chansonPresente.getLong(chansonPresente.getColumnIndex(KEY_DURATION)),
-                    TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT))),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_MUSIC_FILENAME)),
-                    chansonPresente.getInt(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_ID)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_NAME)));
+            if (chansonPresente == null) {
+                return;
+            }
+            do {
+                MusicLibrary.createMediaMetadataCompat(
+                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_URI_STRING)),
+                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_TITRE)),
+                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ARTIST)),
+                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM)),
+                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_GENRE)),
+                        chansonPresente.getLong(chansonPresente.getColumnIndex(KEY_DURATION)),
+                        TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT))),
+                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_MUSIC_FILENAME)),
+                        chansonPresente.getInt(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_ID)),
+                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_NAME))
+                );
+            } while (chansonPresente.moveToNext());
         }
     }
 }

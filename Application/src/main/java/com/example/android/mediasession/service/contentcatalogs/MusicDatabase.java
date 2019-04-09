@@ -146,28 +146,17 @@ public class MusicDatabase extends SQLiteOpenHelper {
         return res;
     }
 
-    //Retournera une liste de integer de tous les id de chansons en bd.
-    public List<Integer> getAllTracks(){
-
-        List<Integer> chansons = new ArrayList<Integer>();
-        int currentID;
-        String selectQuery = "SELECT  * FROM " + TABLE_CHANSON;
+    //Retourne un curseur sur toutes les chansons
+    public Cursor getAllTracks(){
 
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor res = db.rawQuery(selectQuery, null);
+        String selectQuery = "SELECT  * FROM " + TABLE_CHANSON;
 
-        // looping through all rows and adding to list
-        if (res.moveToFirst()) {
-            do {
-                currentID = res.getInt(res.getColumnIndex(KEY_ID));
-                Log.i(LOG, "getAllTracks: " + currentID + " ajouté à la liste.");
-
-                // adding to chansons list
-                chansons.add(currentID);
-            } while (res.moveToNext());
-        }
-        res.close();
-        return chansons;
+        Cursor res =  db.rawQuery( selectQuery, null );
+        if (res != null)
+            res.moveToFirst();
+        //Pas certain sur le type de retour encore...Présentement, je retourne un curseur.
+        return res;
     }
 
     public int getNbOfTracks(){

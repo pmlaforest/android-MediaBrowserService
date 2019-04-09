@@ -17,11 +17,9 @@
 package com.example.android.mediasession.service.contentcatalogs;
 
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
@@ -30,6 +28,7 @@ import com.example.android.BuildConfig;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +42,10 @@ public class MusicLibrary {
     public static String getRoot() {
         return "root";
     }
+
+    public static boolean isEmpty() {return music.isEmpty();}
+
+    public static Set<String> keySet() {return music.keySet();}
 
     private static String getAlbumArtUri(String albumArtResName) {
         return ContentResolver.SCHEME_ANDROID_RESOURCE + "://" +
@@ -70,6 +73,10 @@ public class MusicLibrary {
                             metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
         }
         return result;
+    }
+
+    public static MediaMetadataCompat getMetadataWithoutBitmap(String mediaId) {
+        return music.get(mediaId);
     }
 
     public static MediaMetadataCompat getMetadata(Context context, String mediaId) {
