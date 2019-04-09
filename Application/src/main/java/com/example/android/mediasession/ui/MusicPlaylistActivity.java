@@ -112,7 +112,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
      * (nécessaire pour API 22+) et les demandes à l'utilisateur au besoin.
      */
     private void checkUserPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if ((checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) || (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED)) {
