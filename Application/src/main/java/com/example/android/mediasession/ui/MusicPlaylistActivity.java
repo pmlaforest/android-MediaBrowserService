@@ -178,6 +178,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                     Log.i("MAINACTIVITY", "initialiseDataBase: Chanson" + contentUri.toString() + ": incapabble de faire l'insertion initiale dans la BD.");
                 }
             } while (cursor.moveToNext());
+            cursor.close();
         }
     }
 
@@ -444,6 +445,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                         chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_NAME))
                 );
             } while (chansonPresente.moveToNext());
+            chansonPresente.close();
         }
     }
 }
