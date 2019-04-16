@@ -18,6 +18,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.example.android.wifip2p.file_transfert.AudioFileClientAsyncTask;
+import com.example.android.wifip2p.file_transfert.AudioFileServerAsyncTask;
 import com.example.android.wifip2p.file_transfert.FileTransferService;
 import com.example.android.wifip2p.fragment.DeviceListFragment.DeviceActionListener;
 import com.example.android.wifip2p.WiFiDirectActivity;
@@ -43,9 +46,19 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
     private WifiP2pDevice device;
 
-    private WifiP2pInfo info;
+    public WifiP2pInfo info;
 
     ProgressDialog progressDialog = null;
+
+    public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
+
+    public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
+
+    private   ServerSocket serverSocket = null;
+
+    private  Socket socket = null;
+
+    private static final int SOCKET_TIMEOUT = 5000;
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -93,17 +106,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             ((DeviceActionListener) getActivity()).disconnect();
                         }
                     });
-
             mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
                     new View.OnClickListener() {
 
                         @Override
                         public void onClick(View v) {
-                            // Allow user to pick an image from Gallery or other
-                            // registered apps
-                            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                            intent.setType("image/*");
-                            startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                            startClientOnClickListener(v);
                         }
                     });
         }catch (Exception e){
@@ -149,17 +157,20 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             // After the group negotiation, we assign the group owner as the file
             // server. The file server is single threaded, single connection server
             // socket.
+
             if (info.groupFormed && info.isGroupOwner) {
-                new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
+                new AudioFileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "yes",info.groupOwnerAddress.getHostAddress());
             } else if (info.groupFormed) {
-                // The other device acts as the client. In this case, we enable the
-                // get file button.
-                mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-                ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
-                        .getString(R.string.client_text));
+                new AudioFileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"no",info.groupOwnerAddress.getHostAddress());
+
             }
+
+            // Now we can connect with the client
+            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
+
             // hide the connect button
             mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
+
         }catch (Exception e){
             Log.e("JavaInfo","DeviceDetailFragment_onConnectionInfoAvailable(): " + e);
         }
@@ -201,6 +212,17 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             this.getView().setVisibility(View.GONE);
         }catch (Exception e){
             Log.e("JavaInfo","DeviceDetailFragment_resetViews(): " + e);
+        }
+    }
+
+    private void startClientOnClickListener(View v) {
+        if (info != null) {
+            if (info.groupFormed && info.isGroupOwner) {
+                new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"yes",info.groupOwnerAddress.getHostAddress());
+
+            } else if (info.groupFormed) {
+                new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"no",info.groupOwnerAddress.getHostAddress());
+            }
         }
     }
 
