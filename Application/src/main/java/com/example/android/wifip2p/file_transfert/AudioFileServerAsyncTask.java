@@ -1,35 +1,50 @@
 package com.example.android.wifip2p.file_transfert;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import com.example.android.wifip2p.WiFiDirectActivity;
+import com.example.android.wifip2p.fragment.onIpAddressReceived;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class AudioFileServerAsyncTask extends AsyncTask<String, Void, String> {
+public class AudioFileServerAsyncTask extends AsyncTask<String, String, String> {
 
     private Context context;
     private TextView statusText;
     private String isOwner = "no";
     private int portNumber = -1;
+    private onIpAddressReceived ipReceivedCallback;
+    private ServerSocket serverSocket = null;
+    private Socket client = null;
+
+    private int SEND_RECEIVE_BUFFER_SIZE = 1024;
 
     /**
-     * @param context
+     * @param ipReceivedCallback
      * @param statusText
      */
+
+    public AudioFileServerAsyncTask(onIpAddressReceived ipReceivedCallback, View statusText) {
+        try {
+            this.ipReceivedCallback = ipReceivedCallback;
+            this.statusText = (TextView) statusText;
+        }catch (Exception e){
+            Log.e("JavaInfo","DeviceDetailFragment_FileServerAsyncTask(): " + e);
+        }
+    }
+
     public AudioFileServerAsyncTask(Context context, View statusText) {
         try {
             this.context = context;
@@ -53,20 +68,35 @@ public class AudioFileServerAsyncTask extends AsyncTask<String, Void, String> {
                     portNumber = 8988;
                 }
 
-                ServerSocket serverSocket = new ServerSocket(portNumber);
+                serverSocket = new ServerSocket(portNumber);
                 Log.i("SERVERASYNCTASK:", "opening server socket...");
-                Socket client = serverSocket.accept();
+                client = serverSocket.accept();
                 Log.i("SERVERASYNCTASK:", "getting ready to read in the data");
-                InputStream inputstream = client.getInputStream();
+
+                //BufferedReader inFromClient = new BufferedReader (new InputStreamReader(client.getInputStream()));
+                ObjectInputStream inFromClient = new ObjectInputStream(client.getInputStream());
+
 
                 int len;
-                byte buf[] = new byte[1024];
+                byte buf[] = new byte[SEND_RECEIVE_BUFFER_SIZE];
+                int lenOfData = 0;
 
-                // The server reads a request (from the client) for the list of audio files of the server
-                while ((len = inputstream.read(buf)) != -1) {
+                if (isOwner.equals("yes")) {
+                    // reading IP address
+                    String distantIp = inFromClient.readUTF();
                     Log.i("SERVERASYNCTASK:", "message received!");
-                    Log.i("SERVERASYNCTASK:", new String(buf, "UTF-8"));
+                    Log.i("SERVERASYNCTASK:",distantIp);
+                    ipReceivedCallback.onIpReceivedFromClient(distantIp);
                 }
+
+                // reading Hello World !
+                String helloWorld = inFromClient.readUTF();
+                Log.i("SERVERASYNCTASK:", "message received!");
+                Log.i("SERVERASYNCTASK:", helloWorld);
+
+
+                serverSocket.close();
+                client.close();
 
                 return "Success";
 
@@ -75,7 +105,7 @@ public class AudioFileServerAsyncTask extends AsyncTask<String, Void, String> {
                 return null;
             }
         }catch (Exception e){
-            Log.e("JavaInfo","DeviceDetailFragment_doInBackground(): " + e);
+            Log.e("JavaInfo","Server_doInBackground(): " + e);
             return null;
         }
     }
@@ -86,22 +116,11 @@ public class AudioFileServerAsyncTask extends AsyncTask<String, Void, String> {
      */
     @Override
     protected void onPostExecute(String result) {
-    /*
+
         try {
-            if (result != null) {
-                statusText.setText("File copied - " + result);
-                File recvFile = new File(result);
-                Uri fileUri = FileProvider.getUriForFile(context, "com.example.android.wifidirect.fileprovider", recvFile);
-                Intent intent = new Intent();
-                intent.setAction(android.content.Intent.ACTION_VIEW);
-                intent.setDataAndType(fileUri, "image/*");
-                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                context.startActivity(intent);
-            }
         }catch (Exception e){
             Log.e("JavaInfo","DeviceDetailFragment_onPostExecute(): " + e);
         }
-        */
     }
 
     /*

@@ -11,14 +11,21 @@ import android.widget.TextView;
 
 import com.example.android.wifip2p.WiFiDirectActivity;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.Enumeration;
 
 public class AudioFileClientAsyncTask extends AsyncTask<String, Void, String> {
 
@@ -31,6 +38,10 @@ public class AudioFileClientAsyncTask extends AsyncTask<String, Void, String> {
     private String isOwner = "no";
     private String hostName = "host";
     private int portNumber = -1;
+
+    private Socket socket = null;
+
+    private int SEND_RECEIVE_BUFFER_SIZE = 1024;
 
     /**
      * @param context
@@ -57,25 +68,35 @@ public class AudioFileClientAsyncTask extends AsyncTask<String, Void, String> {
                     portNumber = 8988;
                 }
                 else if (isOwner.equals("no")) {
-                    portNumber = 8989;
+                    portNumber  = 8989;
                 }
 
                 Log.i("CLIENTASYNCTASK:", "opening client socket...");
-                Socket socket = new Socket();
+                Log.i("CLIENTASYNCTASK:", hostName);
+                Log.i("CLIENTASYNCTASK:", Integer.toString(portNumber));
+
+                socket = new Socket();
                 socket.bind(null);
                 socket.connect((new InetSocketAddress(hostName, portNumber)), SOCKET_TIMEOUT);
-                Log.i("CLIENTASYNCTASK:", "connecting to OWNER OF GROUP...");
+                Log.i("CLIENTASYNCTASK:", "connecting to server...");
 
-                OutputStream outputStream = socket.getOutputStream();
+                ObjectOutputStream outToServer = new ObjectOutputStream(socket.getOutputStream());
 
                 int len;
-                byte buf[] = new byte[1024];
-                buf = "Hello World".getBytes("UTF-8");
+                byte buf[] = new byte[SEND_RECEIVE_BUFFER_SIZE];
 
-                Log.i("CLIENTASYNCTASK:", "Sending Hello World!");
+                if (isOwner.equals("no")) {
+                    Log.i("CLIENTASYNCTASK", "Sending IP address");
+                    String distantIp = getDottedDecimalIP(getLocalIPAddress());
+                    outToServer.writeUTF(distantIp);
+                    outToServer.flush();
+                }
 
-                outputStream.write(buf, 0, buf.length);
+                String helloWorld = "Hello World !\n";
+                outToServer.writeUTF(helloWorld);
+                outToServer.flush();
 
+                socket.close();
                 return "success";
 
             } catch (IOException e) {
@@ -83,7 +104,7 @@ public class AudioFileClientAsyncTask extends AsyncTask<String, Void, String> {
                 return null;
             }
         }catch (Exception e){
-            Log.e("JavaInfo","DeviceDetailFragment_doInBackground(): " + e);
+            Log.e("JavaInfo","Client_doInBackground(): " + e);
             return null;
         }
     }
@@ -94,20 +115,15 @@ public class AudioFileClientAsyncTask extends AsyncTask<String, Void, String> {
      */
     @Override
     protected void onPostExecute(String result) {
+
         try {
             if (result != null) {
-                statusText.setText("File copied - " + result);
-                File recvFile = new File(result);
-                Uri fileUri = FileProvider.getUriForFile(context, "com.example.android.wifidirect.fileprovider", recvFile);
-                Intent intent = new Intent();
-                intent.setAction(android.content.Intent.ACTION_VIEW);
-                intent.setDataAndType(fileUri, "image/*");
-                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                context.startActivity(intent);
+                socket.close();
             }
         }catch (Exception e){
             Log.e("JavaInfo","DeviceDetailFragment_onPostExecute(): " + e);
         }
+
     }
 
     /*
@@ -117,7 +133,7 @@ public class AudioFileClientAsyncTask extends AsyncTask<String, Void, String> {
     @Override
     protected void onPreExecute() {
         try{
-            statusText.setText("AudioFileClientAsyncTask");
+            //statusText.setText("AudioFileClientAsyncTask");
         }catch (Exception e){
             Log.e("JavaInfo","DeviceDetailFragment_onPreExecute(): " + e);
         }
@@ -143,4 +159,39 @@ public class AudioFileClientAsyncTask extends AsyncTask<String, Void, String> {
         }
         return true;
     }
+
+    private byte[] getLocalIPAddress() {
+        try {
+            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = en.nextElement();
+                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()) {
+                        if (inetAddress instanceof Inet4Address) { // fix for Galaxy Nexus. IPv4 is easy to use :-)
+                            return inetAddress.getAddress();
+                        }
+                        //return inetAddress.getHostAddress().toString(); // Galaxy Nexus returns IPv6
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            //Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()", ex);
+        } catch (NullPointerException ex) {
+            //Log.e("AndroidNetworkAddressFactory", "getLocalIPAddress()", ex);
+        }
+        return null;
+    }
+
+    private String getDottedDecimalIP(byte[] ipAddr) {
+        //convert to dotted decimal notation:
+        String ipAddrStr = "";
+        for (int i=0; i<ipAddr.length; i++) {
+            if (i > 0) {
+                ipAddrStr += ".";
+            }
+            ipAddrStr += ipAddr[i]&0xFF;
+        }
+        return ipAddrStr;
+    }
+
 }

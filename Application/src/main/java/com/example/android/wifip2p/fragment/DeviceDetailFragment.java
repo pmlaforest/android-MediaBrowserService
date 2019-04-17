@@ -2,7 +2,6 @@ package com.example.android.wifip2p.fragment;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.net.wifi.WpsInfo;
@@ -12,7 +11,6 @@ import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,11 +24,6 @@ import com.example.android.wifip2p.fragment.DeviceListFragment.DeviceActionListe
 import com.example.android.wifip2p.WiFiDirectActivity;
 import com.example.android.R;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -38,7 +31,7 @@ import java.net.Socket;
  * A fragment that manages a particular peer and allows interaction with device
  * i.e. setting up network connection and transferring data.
  */
-public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
+public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener, onIpAddressReceived {
 
     protected static final int CHOOSE_FILE_RESULT_CODE = 20;
 
@@ -53,10 +46,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public static final String EXTRAS_GROUP_OWNER_ADDRESS = "go_host";
 
     public static final String EXTRAS_GROUP_OWNER_PORT = "go_port";
-
-    private   ServerSocket serverSocket = null;
-
-    private  Socket socket = null;
 
     private static final int SOCKET_TIMEOUT = 5000;
 
@@ -106,14 +95,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                             ((DeviceActionListener) getActivity()).disconnect();
                         }
                     });
-            mContentView.findViewById(R.id.btn_start_client).setOnClickListener(
-                    new View.OnClickListener() {
-
-                        @Override
-                        public void onClick(View v) {
-                            startClientOnClickListener(v);
-                        }
-                    });
         }catch (Exception e){
             Log.e("JavaInfo","DeviceDetailFragment_onCreateView(): " + e);
         }
@@ -141,6 +122,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     }
 
     @Override
+    public void onIpReceivedFromClient(String ip) {
+        Log.i("ONIPRECEIVEDFROMCLIENT:", "Entering Function");
+        new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"yes", ip);
+    }
+
+    @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
         try {
             if (progressDialog != null && progressDialog.isShowing()) {
@@ -159,14 +146,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             // socket.
 
             if (info.groupFormed && info.isGroupOwner) {
-                new AudioFileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "yes",info.groupOwnerAddress.getHostAddress());
+                new AudioFileServerAsyncTask(this, mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "yes",info.groupOwnerAddress.getHostAddress());
             } else if (info.groupFormed) {
                 new AudioFileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"no",info.groupOwnerAddress.getHostAddress());
-
+                Thread.sleep(100);
+                new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"no",info.groupOwnerAddress.getHostAddress());
             }
-
-            // Now we can connect with the client
-            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
 
             // hide the connect button
             mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
@@ -208,134 +193,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             view.setText(R.string.empty);
             view = (TextView) mContentView.findViewById(R.id.status_text);
             view.setText(R.string.empty);
-            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.GONE);
             this.getView().setVisibility(View.GONE);
+
         }catch (Exception e){
             Log.e("JavaInfo","DeviceDetailFragment_resetViews(): " + e);
         }
-    }
-
-    private void startClientOnClickListener(View v) {
-        if (info != null) {
-            if (info.groupFormed && info.isGroupOwner) {
-                new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"yes",info.groupOwnerAddress.getHostAddress());
-
-            } else if (info.groupFormed) {
-                new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"no",info.groupOwnerAddress.getHostAddress());
-            }
-        }
-    }
-
-    /**
-     * A simple server socket that accepts connection and writes some data on
-     * the stream.
-     */
-    public static class FileServerAsyncTask extends AsyncTask<Void, Void, String> {
-
-        private Context context;
-
-        private TextView statusText;
-
-        /**
-         * @param context
-         * @param statusText
-         */
-        public FileServerAsyncTask(Context context, View statusText) {
-            try {
-                this.context = context;
-                this.statusText = (TextView) statusText;
-            }catch (Exception e){
-                Log.e("JavaInfo","DeviceDetailFragment_FileServerAsyncTask(): " + e);
-            }
-        }
-
-        @Override
-        protected String doInBackground(Void... params) {
-            try {
-                try {
-                    ServerSocket serverSocket = new ServerSocket(8988);
-                    Log.d(WiFiDirectActivity.TAG, "Server: Socket opened");
-                    Socket client = serverSocket.accept();
-                    Log.d(WiFiDirectActivity.TAG, "Server: connection done");
-                    final File f = new File(context.getExternalFilesDir("received"),
-                            "wifip2pshared-" + System.currentTimeMillis()
-                                    + ".jpg");
-
-                    File dirs = new File(f.getParent());
-                    if (!dirs.exists())
-                        dirs.mkdirs();
-                    f.createNewFile();
-
-                    Log.d(WiFiDirectActivity.TAG, "server: copying files " + f.toString());
-                    InputStream inputstream = client.getInputStream();
-                    copyFile(inputstream, new FileOutputStream(f));
-                    serverSocket.close();
-                    return f.getAbsolutePath();
-                } catch (IOException e) {
-                    Log.e(WiFiDirectActivity.TAG, e.getMessage());
-                    return null;
-                }
-            }catch (Exception e){
-                Log.e("JavaInfo","DeviceDetailFragment_doInBackground(): " + e);
-                return null;
-            }
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see android.os.AsyncTask#onPostExecute(java.lang.Object)
-         */
-        @Override
-        protected void onPostExecute(String result) {
-            try {
-                if (result != null) {
-                    statusText.setText("File copied - " + result);
-                    File recvFile = new File(result);
-                    Uri fileUri = FileProvider.getUriForFile(context, "com.example.android.wifidirect.fileprovider", recvFile);
-                    Intent intent = new Intent();
-                    intent.setAction(android.content.Intent.ACTION_VIEW);
-                    intent.setDataAndType(fileUri, "image/*");
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    context.startActivity(intent);
-                }
-            }catch (Exception e){
-                Log.e("JavaInfo","DeviceDetailFragment_onPostExecute(): " + e);
-            }
-        }
-
-        /*
-         * (non-Javadoc)
-         * @see android.os.AsyncTask#onPreExecute()
-         */
-        @Override
-        protected void onPreExecute() {
-            try{
-                statusText.setText("Opening a server socket");
-            }catch (Exception e){
-                Log.e("JavaInfo","DeviceDetailFragment_onPreExecute(): " + e);
-            }
-        }
-
-    }
-
-    public static boolean copyFile(InputStream inputStream, OutputStream out) {
-        try {
-            byte buf[] = new byte[1024];
-            int len;
-            try {
-                while ((len = inputStream.read(buf)) != -1) {
-                    out.write(buf, 0, len);
-
-                }
-                out.close();
-                inputStream.close();
-            } catch (IOException e) {
-                Log.d(WiFiDirectActivity.TAG, e.toString());
-                return false;
-            }
-        }catch (Exception e){
-            Log.e("JavaInfo","DeviceDetailFragment_copyFile(): " + e);
-        }
-        return true;
     }
 }
