@@ -101,8 +101,12 @@
 
         <!-- Used for transferring files  after a successful connection -->
         <service
-            android:name=".wifip2p.file_transfert.FileTransferService"
+            android:name=".wifip2p.file_transfert.AudioFileServerService"
             android:enabled="true" />
+        <service
+            android:name=".wifip2p.file_transfert.AudioFileClientService"
+            android:enabled="true" />
+
 
     </application>
 

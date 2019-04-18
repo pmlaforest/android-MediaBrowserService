@@ -3,13 +3,11 @@ package com.example.android.wifip2p.fragment;
 import android.app.Fragment;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.net.Uri;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,21 +15,16 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.example.android.wifip2p.file_transfert.AudioFileClientAsyncTask;
-import com.example.android.wifip2p.file_transfert.AudioFileServerAsyncTask;
-import com.example.android.wifip2p.file_transfert.FileTransferService;
+import com.example.android.wifip2p.file_transfert.AudioFileClientService;
+import com.example.android.wifip2p.file_transfert.AudioFileServerService;
 import com.example.android.wifip2p.fragment.DeviceListFragment.DeviceActionListener;
-import com.example.android.wifip2p.WiFiDirectActivity;
 import com.example.android.R;
-
-import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
  * A fragment that manages a particular peer and allows interaction with device
  * i.e. setting up network connection and transferring data.
  */
-public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener, onIpAddressReceived {
+public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
 
     protected static final int CHOOSE_FILE_RESULT_CODE = 20;
 
@@ -102,32 +95,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        try {
-            // User has picked an image. Transfer it to group owner i.e peer using
-            // FileTransferService.
-            Uri uri = data.getData();
-            TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
-            statusText.setText("Sending: " + uri);
-            Log.d(WiFiDirectActivity.TAG, "Intent----------- " + uri);
-            Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-            serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-            serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS, info.groupOwnerAddress.getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
-            getActivity().startService(serviceIntent);
-        }catch (Exception e){
-            Log.e("JavaInfo","DeviceDetailFragment_onActivityResult(): " + e);
-        }
-    }
-
-    @Override
-    public void onIpReceivedFromClient(String ip) {
-        Log.i("ONIPRECEIVEDFROMCLIENT:", "Entering Function");
-        new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"yes", ip);
-    }
-
-    @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info) {
         try {
             if (progressDialog != null && progressDialog.isShowing()) {
@@ -146,11 +113,19 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             // socket.
 
             if (info.groupFormed && info.isGroupOwner) {
-                new AudioFileServerAsyncTask(this, mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, "yes",info.groupOwnerAddress.getHostAddress());
+                Intent serverIntent = new Intent(getActivity(), AudioFileServerService.class);
+                serverIntent.putExtra(AudioFileServerService.OWNER_KEY, "yes");
+                getActivity().startService(serverIntent);
+
             } else if (info.groupFormed) {
-                new AudioFileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"no",info.groupOwnerAddress.getHostAddress());
-                Thread.sleep(100);
-                new AudioFileClientAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,"no",info.groupOwnerAddress.getHostAddress());
+                Intent serverIntent = new Intent(getActivity(), AudioFileServerService.class);
+                serverIntent.putExtra(AudioFileServerService.OWNER_KEY, "no");
+                getActivity().startService(serverIntent);
+
+                Intent clientIntent = new Intent(getActivity(), AudioFileClientService.class);
+                clientIntent.putExtra(AudioFileClientService.OWNER_KEY, "no");
+                clientIntent.putExtra(AudioFileClientService.HOSTNAME_KEY, info.groupOwnerAddress.getHostAddress());
+                getActivity().startService(clientIntent);
             }
 
             // hide the connect button
