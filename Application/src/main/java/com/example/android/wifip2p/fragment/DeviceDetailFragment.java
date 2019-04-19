@@ -112,21 +112,15 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             // server. The file server is single threaded, single connection server
             // socket.
 
+            Intent serverIntent = new Intent(getActivity(), AudioFileServerService.class);
             if (info.groupFormed && info.isGroupOwner) {
-                Intent serverIntent = new Intent(getActivity(), AudioFileServerService.class);
                 serverIntent.putExtra(AudioFileServerService.OWNER_KEY, "yes");
-                getActivity().startService(serverIntent);
-
             } else if (info.groupFormed) {
-                Intent serverIntent = new Intent(getActivity(), AudioFileServerService.class);
                 serverIntent.putExtra(AudioFileServerService.OWNER_KEY, "no");
-                getActivity().startService(serverIntent);
-
-                Intent clientIntent = new Intent(getActivity(), AudioFileClientService.class);
-                clientIntent.putExtra(AudioFileClientService.OWNER_KEY, "no");
-                clientIntent.putExtra(AudioFileClientService.HOSTNAME_KEY, info.groupOwnerAddress.getHostAddress());
-                getActivity().startService(clientIntent);
             }
+            serverIntent.setAction(AudioFileServerService.ACTION_INIT_SERVER);
+            serverIntent.putExtra(AudioFileClientService.HOSTNAME_KEY,  info.groupOwnerAddress.getHostAddress());
+            getActivity().startService(serverIntent);
 
             // hide the connect button
             mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);

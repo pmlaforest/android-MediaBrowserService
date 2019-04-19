@@ -1,155 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/frameLayout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <LinearLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-
-        <LinearLayout
+        <fragment
+            class="com.example.android.wifip2p.fragment.DeviceListFragment"
+            android:id="@+id/frag_list"
             android:layout_width="match_parent"
-            android:id="@+id/linearLayout1"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-            <fragment
-                class="com.example.android.wifip2p.fragment.DeviceListFragment"
-                android:id="@+id/frag_list"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/phone_list_height"
-                style="@style/LayoutMargin">
-                <!-- Preview: layouts=@layouts/row_devices -->
-            </fragment>
-            <fragment
-                class="com.example.android.wifip2p.fragment.DeviceDetailFragment"
-                android:id="@+id/frag_detail"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                style="@style/LayoutMargin">
-                <!-- Preview: layouts=@layouts/device_detail -->
-            </fragment>
-        </LinearLayout>
-    </LinearLayout>
-    <RelativeLayout
-        android:id="@+id/player_footer"
+            android:layout_height="@dimen/phone_list_height"
+            android:layout_weight="1">
+        </fragment>
+        <fragment
+            class="com.example.android.wifip2p.fragment.DeviceDetailFragment"
+            android:id="@+id/frag_detail"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+        </fragment>
+
+    <fragment
+        android:id="@+id/frag_footer"
+        class="com.example.android.mediasession.ui.fragment.FooterFragment"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:orientation="horizontal"
-        android:background="#ffffff"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <View
-            android:id="@+id/player_footer_line"
-            android:layout_height="2dip"
-            android:background="#000000"
-            android:layout_width="match_parent" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:orientation="horizontal">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="1"
-                >
-
-                <ImageButton
-                    android:id="@+id/download_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="#0000"
-                    android:src="@drawable/baseline_get_app_black_24dp" />
-
-                <TextView
-                    android:id="@+id/download_textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="15dp"
-                    android:layout_gravity="center"
-                    android:text="@string/download_msg" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="1">
-
-                <ImageButton
-                    android:id="@+id/playlist_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="#0000"
-                    android:src="@drawable/baseline_queue_music_black_24dp" />
-
-                <TextView
-                    android:id="@+id/playlist_textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="15dp"
-                    android:layout_gravity="center"
-                    android:text="@string/playlist_msg" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="1">
-
-                <ImageButton
-                    android:id="@+id/parameters_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="#0000"
-                    android:src="@drawable/baseline_settings_black_24dp" />
-
-                <TextView
-                    android:id="@+id/parameters_textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="15dp"
-                    android:layout_gravity="center"
-                    android:text="@string/parameters_msg" />
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="1">
-
-                <ImageButton
-                    android:id="@+id/mediaPlayer_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:background="#0000"
-                    android:src="@drawable/baseline_music_video_black_24dp" />
-
-                <TextView
-                    android:id="@+id/mediaPlayer_textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="15dp"
-                    android:layout_gravity="center"
-                    android:text="@string/mediaPlayer_msg" />
-            </LinearLayout>
-
-        </LinearLayout>
-    </RelativeLayout>
-</android.support.constraint.ConstraintLayout>
+        android:layout_height="80dp" />
+</LinearLayout>

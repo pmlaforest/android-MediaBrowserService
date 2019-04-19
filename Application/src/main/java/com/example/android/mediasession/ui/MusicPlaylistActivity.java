@@ -90,7 +90,6 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
             MusicLibraryLoader.loadFromDB(this.musicDatabase);
         }
 
-        setFooterElementsOnClickListener();
         //new LongOperation().execute("");
         long start = System.currentTimeMillis();
         createListOfTracks();
@@ -124,28 +123,6 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         }
     }
 
-    private void setFooterElementsOnClickListener() {
-
-        TextView downloadTrackTextView = (TextView) findViewById(R.id.download_textView);
-        ImageButton downloadTrackImageButton = (ImageButton) findViewById(R.id.download_button);
-        downloadTrackTextView.setOnClickListener(this);
-        downloadTrackImageButton.setOnClickListener(this);
-
-        TextView playlistTextView = (TextView) findViewById(R.id.playlist_textView);
-        ImageButton playlistImageButton = (ImageButton) findViewById(R.id.playlist_button);
-        playlistTextView.setOnClickListener(this);
-        playlistImageButton.setOnClickListener(this);
-
-        TextView parametersTextView = (TextView) findViewById(R.id.parameters_textView);
-        ImageButton parametersImageButton = (ImageButton) findViewById(R.id.parameters_button);
-        parametersTextView.setOnClickListener(this);
-        parametersImageButton.setOnClickListener(this);
-
-        TextView mediaPlayerTextView = (TextView) findViewById(R.id.mediaPlayer_textView);
-        ImageButton mediaPlayerImageButton = (ImageButton) findViewById(R.id.mediaPlayer_button);
-        mediaPlayerTextView.setOnClickListener(this);
-        mediaPlayerImageButton.setOnClickListener(this);
-    }
 
     private void createListOfTracks() {
 
@@ -235,26 +212,12 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
     }
 
     public void onClick(View view) {
-        Intent intent;
-        String caller = "";
-        int id = view.getId();
+        Intent intent = null;
 
-        if (id == R.id.download_button || id == R.id.download_textView) {
-            intent = new Intent(MusicPlaylistActivity.this, WiFiDirectActivity.class);
-            startActivityForResult(intent, 1);
-        } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
-            //something
-        } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
-            //pass
-        } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
-            intent = new Intent(MusicPlaylistActivity.this, MainActivity.class);
-            startActivityForResult(intent, 1);
-        } else {
-            // This is a tableRow
-            intent = new Intent(MusicPlaylistActivity.this, MainActivity.class);
-            intent.putExtra("mediaId", (String) view.getTag());
-            startActivityForResult(intent, 1);
-        }
+        // This is a tableRow
+        intent = new Intent(this, MainActivity.class);
+        intent.putExtra("mediaId", (String) view.getTag());
+        startActivity(intent);
     }
 
     private void copySampleToMusicFolder(File sampleFile, String assetsFilename) {

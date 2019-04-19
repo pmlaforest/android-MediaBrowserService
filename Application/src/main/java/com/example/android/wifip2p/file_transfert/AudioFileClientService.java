@@ -22,6 +22,9 @@ public class AudioFileClientService extends IntentService {
 
     private static final int SOCKET_TIMEOUT = 5000;
 
+    public static final String ACTION_INIT_CLIENT = "com.example.android.wifidirect.ACTION_INIT_CLIENT";
+    public static final String CLOSE_CLIENT = "com.example.android.wifidirect.CLOSE_CONN";
+
     public static final String OWNER_KEY = "owner";
     public static final String HOSTNAME_KEY = "hostname";
 
@@ -50,6 +53,21 @@ public class AudioFileClientService extends IntentService {
 
             isOwner = intent.getExtras().getString(OWNER_KEY);
             hostName = intent.getExtras().getString(HOSTNAME_KEY);
+
+            if (intent.getAction().equals(ACTION_INIT_CLIENT)) {
+                initClientConnection();
+                socket.close();
+            }
+            if (intent.getAction().equals(CLOSE_CLIENT)) {
+            }
+        }catch (Exception e){
+            Log.e("JavaInfo","FileTransferService_onHandleIntent(): " + e);
+            e.printStackTrace();
+        }
+    }
+
+    private void initClientConnection() {
+        try {
 
             if (isOwner.equals("yes")) {
                 portNumber = 8988;
@@ -81,10 +99,8 @@ public class AudioFileClientService extends IntentService {
             outToServer.writeUTF(helloWorld);
             outToServer.flush();
 
-            socket.close();
-
         }catch (Exception e){
-            Log.e("JavaInfo","FileTransferService_onHandleIntent(): " + e);
+            Log.e("JavaInfo","ClientService_onHandleIntent(): " + e);
             e.printStackTrace();
         }
     }

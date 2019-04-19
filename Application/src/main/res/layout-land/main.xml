@@ -22,8 +22,14 @@
             class="com.example.android.wifip2p.fragment.DeviceDetailFragment"
             android:id="@+id/frag_detail"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_weight="1">
             <!-- Preview: layouts=@layouts/device_detail -->
         </fragment>
+        <fragment
+            android:id="@+id/frag_footer"
+            class="com.example.android.mediasession.ui.fragment.FooterFragment"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"/>
     </LinearLayout>
 </LinearLayout>

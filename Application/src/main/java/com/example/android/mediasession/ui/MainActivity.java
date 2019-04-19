@@ -76,8 +76,6 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.button_play).setOnClickListener(clickListener);
         findViewById(R.id.button_next).setOnClickListener(clickListener);
 
-        setFooterElementsOnClickListener();
-
         mMediaBrowserHelper = new MediaBrowserConnection(this);
         mMediaBrowserHelper.registerCallback(new MediaBrowserListener());
 
@@ -118,59 +116,6 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    private void setFooterElementsOnClickListener() {
-
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent;
-                String caller = "";
-                int id = view.getId();
-
-                try {
-                    caller = getCallingActivity().getClassName();
-                } catch (NullPointerException e){
-                    e.printStackTrace();
-                }
-
-                if (id == R.id.download_button || id == R.id.download_textView) {
-                    if (caller.equals(WiFiDirectActivity.class.getName())) {
-                        setResult(RESULT_OK);
-                        finish();
-                    }
-                    intent = new Intent(MainActivity.this, WiFiDirectActivity.class);
-                    startActivityForResult(intent, 1);
-                } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
-                    //something
-                } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
-                    finish();
-                } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
-                    //pass
-                }
-            }
-        };
-
-        TextView downloadTrackTextView = findViewById(R.id.download_textView);
-        ImageButton downloadTrackImageButton = findViewById(R.id.download_button);
-        downloadTrackTextView.setOnClickListener(listener);
-        downloadTrackImageButton.setOnClickListener(listener);
-
-        TextView playlistTextView = findViewById(R.id.playlist_textView);
-        ImageButton playlistImageButton = findViewById(R.id.playlist_button);
-        playlistTextView.setOnClickListener(listener);
-        playlistImageButton.setOnClickListener(listener);
-
-        TextView parametersTextView = findViewById(R.id.parameters_textView);
-        ImageButton parametersImageButton = findViewById(R.id.parameters_button);
-        parametersTextView.setOnClickListener(listener);
-        parametersImageButton.setOnClickListener(listener);
-
-        TextView mediaPlayerTextView = findViewById(R.id.mediaPlayer_textView);
-        ImageButton mediaPlayerImageButton = findViewById(R.id.mediaPlayer_button);
-        mediaPlayerTextView.setOnClickListener(listener);
-        mediaPlayerImageButton.setOnClickListener(listener);
     }
 
     @Override
