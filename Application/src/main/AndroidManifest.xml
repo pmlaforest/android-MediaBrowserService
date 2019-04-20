@@ -50,6 +50,11 @@
                 android:value=".mediasession.ui.MusicPlaylistActivity"/>
         </activity>
 
+        <activity
+            android:name=".mediasession.ui.DownloadListActivity"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme"></activity>
+
         <service
                 android:name=".mediasession.service.MusicService"
                 android:enabled="true"

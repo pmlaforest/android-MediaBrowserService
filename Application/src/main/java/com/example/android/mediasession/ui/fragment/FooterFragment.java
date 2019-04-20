@@ -11,6 +11,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.example.android.R;
+import com.example.android.mediasession.ui.DownloadListActivity;
 import com.example.android.mediasession.ui.MainActivity;
 import com.example.android.mediasession.ui.MusicPlaylistActivity;
 import com.example.android.wifip2p.WiFiDirectActivity;
@@ -47,6 +48,7 @@ public class FooterFragment extends Fragment implements View.OnClickListener {
         switch (view.getId()) {
             case R.id.download_button:
             case R.id.download_textView:
+                startActivity(new Intent(getActivity(), DownloadListActivity.class));
                 break;
             case R.id.parameters_button:
             case R.id.parameters_textView:

@@ -3,11 +3,19 @@ package com.example.android.wifip2p.file_transfert;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.media.MediaMetadataCompat;
 import android.util.Log;
+import android.widget.TableRow;
+
+import com.example.android.mediasession.service.contentcatalogs.MusicDatabase;
+import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A service that process each file transfer request i.e Intent by opening a
@@ -29,7 +37,10 @@ public class AudioFileServerService extends IntentService {
 
     private ServerSocket serverSocket = null;
     private Socket client = null;
+    ObjectInputStream inFromClient = null;
+    ObjectOutputStream outToClient = null;
 
+    private MusicDatabase musicDatabase;
 
     public AudioFileServerService(String name) {
         super(name);
@@ -52,11 +63,11 @@ public class AudioFileServerService extends IntentService {
         try {
             if (intent.getAction().equals(ACTION_INIT_SERVER)) {
                 initServer();
-                serverSocket.close();
-                client.close();
+                sendDownloadList();
             }
             if (intent.getAction().equals(CLOSE_SERVER)) {
-                closeServer();
+                serverSocket.close();
+                client.close();
             }
         }catch (Exception e){
         Log.e("JavaInfo","FileTransferService_onHandleIntent(): " + e);
@@ -81,6 +92,43 @@ public class AudioFileServerService extends IntentService {
         }
     }
 
+    private void sendDownloadList() {
+
+        try {
+            outToClient.writeInt(MusicLibrary.keySet().size());
+
+            for (String key : MusicLibrary.keySet()) {
+
+                MediaMetadataCompat mmc = MusicLibrary.getMetadataWithoutBitmap(key);
+                DownloadEntry downloadEntry = null;
+
+                String mediaId = mmc.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
+                if (mediaId == null) {
+                    continue;
+                }
+                downloadEntry.mediaId = mediaId;
+
+                String title = mmc.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+                if (title == null) {
+                    title = "unknown";
+                }
+                downloadEntry.title = title;
+
+                String artist = mmc.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+                if (artist == null) {
+                    artist = "unknown";
+                }
+                downloadEntry.artist = artist;
+
+                outToClient.writeObject(downloadEntry);
+            }
+
+        }catch (Exception e){
+            Log.e("JavaInfo","ClientService_onHandleIntent(): " + e);
+            e.printStackTrace();
+        }
+    }
+
     private void initServer() {
         try {
             if (isOwner.equals("yes")) {
@@ -101,7 +149,8 @@ public class AudioFileServerService extends IntentService {
             client = serverSocket.accept();
             Log.i("SERVERASYNCTASK:", "getting ready to read in the data");
 
-            ObjectInputStream inFromClient = new ObjectInputStream(client.getInputStream());
+            inFromClient = new ObjectInputStream(client.getInputStream());
+            outToClient = new ObjectOutputStream(client.getOutputStream());
 
             if (isOwner.equals("yes")) {
                 // reading IP address

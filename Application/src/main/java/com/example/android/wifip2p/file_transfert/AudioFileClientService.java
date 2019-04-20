@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -12,7 +13,9 @@ import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 
 /**
  * A service that process each file transfer request i.e Intent by opening a
@@ -33,6 +36,11 @@ public class AudioFileClientService extends IntentService {
     private int portNumber = -1;
 
     private Socket socket = null;
+
+    ObjectOutputStream outToServer = null;
+    ObjectInputStream inFromServer = null;
+
+    public static List<DownloadEntry> downloadableEntries = new ArrayList<DownloadEntry>();
 
     public AudioFileClientService(String name) {
         super(name);
@@ -56,12 +64,32 @@ public class AudioFileClientService extends IntentService {
 
             if (intent.getAction().equals(ACTION_INIT_CLIENT)) {
                 initClientConnection();
-                socket.close();
+                receiveDownloadList();
             }
             if (intent.getAction().equals(CLOSE_CLIENT)) {
+                socket.close();
             }
+
         }catch (Exception e){
             Log.e("JavaInfo","FileTransferService_onHandleIntent(): " + e);
+            e.printStackTrace();
+        }
+    }
+
+    private void receiveDownloadList() {
+
+        try {
+
+            int nbOfDownloadableEntries = inFromServer.readInt();
+
+            for (int entryNb = 0; entryNb  < nbOfDownloadableEntries; entryNb++) {
+                DownloadEntry downloadEntry = new DownloadEntry();
+                downloadEntry = (DownloadEntry) inFromServer.readObject();
+                downloadableEntries.add(downloadEntry);
+            }
+
+        }catch (Exception e){
+            Log.e("JavaInfo","ClientService_onHandleIntent(): " + e);
             e.printStackTrace();
         }
     }
@@ -85,7 +113,8 @@ public class AudioFileClientService extends IntentService {
             socket.connect((new InetSocketAddress(hostName, portNumber)), SOCKET_TIMEOUT);
             Log.i("CLIENTASYNCTASK:", "connecting to server...");
 
-            ObjectOutputStream outToServer = new ObjectOutputStream(socket.getOutputStream());
+            outToServer = new ObjectOutputStream(socket.getOutputStream());
+            inFromServer = new ObjectInputStream(socket.getInputStream());
 
             if (isOwner.equals("no")) {
                 Log.i("CLIENTASYNCTASK", "Sending IP address");
