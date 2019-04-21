@@ -22,12 +22,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.mediasession.ui.MainActivity;
 import com.example.android.mediasession.ui.MusicPlaylistActivity;
+import com.example.android.wifip2p.file_transfert.AudioFileServerService;
 import com.example.android.wifip2p.fragment.DeviceDetailFragment;
 import com.example.android.wifip2p.fragment.DeviceListFragment;
 import com.example.android.wifip2p.fragment.DeviceListFragment.DeviceActionListener;
@@ -96,8 +95,6 @@ public class WiFiDirectActivity extends AppCompatActivity implements ChannelList
 
             manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
             channel = manager.initialize(this, getMainLooper(), null);
-
-            setFooterElementsOnClickListener();
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, WiFiDirectActivity.PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
@@ -215,68 +212,6 @@ public class WiFiDirectActivity extends AppCompatActivity implements ChannelList
         return true;
     }
 
-    private void setFooterElementsOnClickListener() {
-
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent;
-                String caller = "";
-                int id = view.getId();
-
-                try {
-                    caller = getCallingActivity().getClassName();
-                } catch (NullPointerException e){
-                    e.printStackTrace();
-                }
-
-
-                if (id == R.id.download_button || id == R.id.download_textView) {
-                    //pass
-                } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
-                    //something
-                } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
-                    finish();
-                } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
-                    if (caller.equals(MainActivity.class.getName())) {
-                        setResult(RESULT_OK);
-                        finish();
-                    }
-                    intent = new Intent(WiFiDirectActivity.this, MainActivity.class);
-                    startActivityForResult(intent, 1);
-                }
-            }
-        };
-
-        TextView downloadTrackTextView = findViewById(R.id.download_textView);
-        ImageButton downloadTrackImageButton = findViewById(R.id.download_button);
-        downloadTrackTextView.setOnClickListener(listener);
-        downloadTrackImageButton.setOnClickListener(listener);
-
-        TextView playlistTextView = findViewById(R.id.playlist_textView);
-        ImageButton playlistImageButton = findViewById(R.id.playlist_button);
-        playlistTextView.setOnClickListener(listener);
-        playlistImageButton.setOnClickListener(listener);
-
-        TextView parametersTextView = findViewById(R.id.parameters_textView);
-        ImageButton parametersImageButton = findViewById(R.id.parameters_button);
-        parametersTextView.setOnClickListener(listener);
-        parametersImageButton.setOnClickListener(listener);
-
-        TextView mediaPlayerTextView = findViewById(R.id.mediaPlayer_textView);
-        ImageButton mediaPlayerImageButton = findViewById(R.id.mediaPlayer_button);
-        mediaPlayerTextView.setOnClickListener(listener);
-        mediaPlayerImageButton.setOnClickListener(listener);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK){
-            finish();
-        }
-    }
-
     @Override
     public void showDetails(WifiP2pDevice device) {
         try {
@@ -323,7 +258,7 @@ public class WiFiDirectActivity extends AppCompatActivity implements ChannelList
                 @Override
                 public void onSuccess() {
                     fragment.getView().setVisibility(View.GONE);
-                }
+            }
 
             });
         }catch (Exception e){

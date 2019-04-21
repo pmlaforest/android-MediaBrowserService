@@ -14,8 +14,9 @@
         <fragment
             class="com.example.android.wifip2p.fragment.DeviceListFragment"
             android:id="@+id/frag_list"
-            android:layout_width="@dimen/phone_list_height"
-            android:layout_height="match_parent">
+            android:layout_width="@dimen/phone_list_width_large"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
             <!-- Preview: layouts=@layouts/row_devices -->
         </fragment>
         <fragment
@@ -29,7 +30,7 @@
         <fragment
             android:id="@+id/frag_footer"
             class="com.example.android.mediasession.ui.fragment.FooterFragment"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"/>
+            android:layout_width="100dp"
+            android:layout_height="match_parent"/>
     </LinearLayout>
 </LinearLayout>

@@ -26,8 +26,11 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 import com.example.android.R;
+import com.example.android.mediasession.service.contentcatalogs.DownloadLibrary;
 import com.example.android.mediasession.service.contentcatalogs.MusicDatabase;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
+import com.example.android.wifip2p.file_transfert.AudioFileClientService;
+import com.example.android.wifip2p.file_transfert.DownloadEntry;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,6 +52,9 @@ import static com.example.android.mediasession.service.contentcatalogs.MusicData
 
 public class DownloadListActivity extends AppCompatActivity implements View.OnClickListener {
 
+    DownloadLibrary downloadLibrary = new DownloadLibrary();
+    MusicLibrary musicLibrary = new MusicLibrary();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,29 +65,13 @@ public class DownloadListActivity extends AppCompatActivity implements View.OnCl
 
     private void createListOfTracks() {
 
-        TableLayout table = findViewById(R.id.table1);
+        TableLayout table = findViewById(R.id.table2);
 
-        for (String key : MusicLibrary.keySet()) {
-
-            MediaMetadataCompat mmc = MusicLibrary.getMetadataWithoutBitmap(key);
-            String mediaId = mmc.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
-            if (mediaId == null) {
-                continue;
-            }
-            String title = mmc.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-            if (title == null) {
-                title = "unknown";
-            }
-            String artist = mmc.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-            if (artist == null) {
-                artist = "unknown";
-            }
-            long duration = mmc.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
-            if (duration == 0L) {
-                //do something?
-            }
-
-            TableRow newRow = createTrackEntry(title, artist, (int) duration, mediaId);
+        for (DownloadEntry downloadEntry : downloadLibrary.downloadableEntries) {
+            TableRow newRow = createTrackEntry(downloadEntry.title,
+                    downloadEntry.artist,
+                    0,
+                    downloadEntry.mediaId);
             table.addView(newRow);
         }
     }
@@ -147,9 +137,15 @@ public class DownloadListActivity extends AppCompatActivity implements View.OnCl
     public void onClick(View view) {
         Intent intent = null;
 
-        // This is a tableRow
-        intent = new Intent(this, MainActivity.class);
-        intent.putExtra("mediaId", (String) view.getTag());
-        startActivity(intent);
+        intent = new Intent(this, AudioFileClientService.class);
+        intent.putExtra(AudioFileClientService.MEDIA_ID_KEY, (String) view.getTag());
+
+        DownloadEntry trackToReceive = new DownloadEntry();
+        trackToReceive.mediaId = (String) view.getTag();
+
+        intent.putExtra(AudioFileClientService.FILENAME_KEY,
+                downloadLibrary.downloadableEntries.get(downloadLibrary.downloadableEntries.indexOf(trackToReceive)).title);
+        intent.setAction(AudioFileClientService.ACTION_GET_AUDIO_FILE);
+        startService(intent);
     }
 }

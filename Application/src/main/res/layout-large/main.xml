@@ -4,22 +4,23 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     style="@style/LayoutMargin">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:id="@+id/linearLayout1"
-        android:layout_height="fill_parent"
-        android:orientation="horizontal"
-        style="@style/LayoutMargin">
         <fragment class="com.example.android.wifip2p.fragment.DeviceListFragment"
-            android:id="@+id/frag_list" android:layout_width="@dimen/tablet_list_width"
-            android:layout_height="match_parent">
+            android:id="@+id/frag_list"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/tablet_list_width"
+            android:layout_weight="1">
             <!-- Preview: layouts=@layouts/row_devices -->
         </fragment>
         <fragment class="com.example.android.wifip2p.fragment.DeviceDetailFragment"
             android:id="@+id/frag_detail"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="0dp"
+            android:layout_weight="1">
             <!-- Preview: layouts=@layouts/device_detail -->
         </fragment>
-    </LinearLayout>
+        <fragment
+            android:id="@+id/frag_footer"
+            class="com.example.android.mediasession.ui.fragment.FooterFragment"
+            android:layout_width="match_parent"
+            android:layout_height="80dp" />
 </LinearLayout>

@@ -15,7 +15,8 @@
   limitations under the License.
  -->
 <resources>
-    <dimen name="tablet_list_width">300dp</dimen>
-    <dimen name="phone_list_height">200dp</dimen>
+    <dimen name="tablet_list_width">150dp</dimen>
+    <dimen name="phone_list_width_large">300dp</dimen>
+    <dimen name="phone_list_height">100dp</dimen>
     
 </resources>

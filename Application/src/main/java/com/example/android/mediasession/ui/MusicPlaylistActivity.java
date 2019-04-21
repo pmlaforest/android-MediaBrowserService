@@ -67,7 +67,7 @@ import static com.example.android.mediasession.service.contentcatalogs.MusicData
 
 public class MusicPlaylistActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String MUSIC_FOLDER_NAME = "streamingapp_music";
+    public static final String MUSIC_FOLDER_NAME = "streamingapp_music";
 
     private MusicDatabase musicDatabase;
 

@@ -153,6 +153,11 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
      */
     public void resetViews() {
         try {
+
+            Intent disconnectIntent = new Intent(getActivity(), AudioFileServerService.class);
+            disconnectIntent.setAction(AudioFileServerService.ACTION_CLOSE_SERVER);
+            getActivity().startService(disconnectIntent);
+
             mContentView.findViewById(R.id.btn_connect).setVisibility(View.VISIBLE);
             TextView view = (TextView) mContentView.findViewById(R.id.device_address);
             view.setText(R.string.empty);

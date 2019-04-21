@@ -1,8 +1,10 @@
 package com.example.android.wifip2p.file_transfert;
 
 import android.app.IntentService;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.media.MediaMetadataCompat;
 import android.util.Log;
 import android.widget.TableRow;
@@ -10,6 +12,9 @@ import android.widget.TableRow;
 import com.example.android.mediasession.service.contentcatalogs.MusicDatabase;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -26,7 +31,7 @@ public class AudioFileServerService extends IntentService {
     private static final int SOCKET_TIMEOUT = 5000;
 
     public static final String ACTION_INIT_SERVER = "com.example.android.wifidirect.ACTION_INIT_SERVER";
-    public static final String CLOSE_SERVER = "com.example.android.wifidirect.CLOSE_SERVER";
+    public static final String ACTION_CLOSE_SERVER = "com.example.android.wifidirect.ACTION_CLOSE_SERVER";
 
     public static final String OWNER_KEY = "owner";
     public static final String HOSTNAME_KEY = "hostname";
@@ -35,12 +40,12 @@ public class AudioFileServerService extends IntentService {
     private String hostName = null;
     private int portNumber = -1;
 
-    private ServerSocket serverSocket = null;
-    private Socket client = null;
-    ObjectInputStream inFromClient = null;
-    ObjectOutputStream outToClient = null;
+    private static ServerSocket serverSocket = null;
+    private static Socket client = null;
+    private static ObjectInputStream inFromClient = null;
+    private static ObjectOutputStream outToClient = null;
 
-    private MusicDatabase musicDatabase;
+    private MusicLibrary musicLibrary = new MusicLibrary();
 
     public AudioFileServerService(String name) {
         super(name);
@@ -57,35 +62,65 @@ public class AudioFileServerService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Context context = getApplicationContext();
-        isOwner = intent.getExtras().getString(OWNER_KEY);
-        hostName = intent.getExtras().getString(HOSTNAME_KEY);
 
         try {
             if (intent.getAction().equals(ACTION_INIT_SERVER)) {
-                initServer();
-                sendDownloadList();
+                isOwner = intent.getExtras().getString(OWNER_KEY);
+                hostName = intent.getExtras().getString(HOSTNAME_KEY);
+
+                if (serverSocket == null && client == null) {
+                    initServer();
+                    sendDownloadList();
+                    sendAudioFile();
+                }
             }
-            if (intent.getAction().equals(CLOSE_SERVER)) {
-                serverSocket.close();
-                client.close();
+            if (intent.getAction().equals(ACTION_CLOSE_SERVER)) {
+                closeServer();
             }
         }catch (Exception e){
         Log.e("JavaInfo","FileTransferService_onHandleIntent(): " + e);
         e.printStackTrace();
         }
+    }
 
+    private void sendAudioFile()  {
+
+        try {
+            String fileUri = inFromClient.readUTF();
+            Log.i("SENDAUDIOFILE", "must send a file " + fileUri);
+
+            ContentResolver cr = this.getContentResolver();
+            InputStream is = null;
+            try {
+                is = cr.openInputStream(Uri.parse(fileUri));
+            } catch (FileNotFoundException e) {
+                Log.d("SENDAUDIOFILE", e.toString());
+            }
+
+            copyFileToSocket(is, outToClient);
+
+        }catch(Exception e) {
+            Log.e("SENDAUDIOFILE", "read/write file exception");
+            e.printStackTrace();
+        }
     }
 
     private void closeServer() {
         try {
-            Intent closeClientIntent = new Intent(this, AudioFileClientService.class);
-            closeClientIntent.setAction(AudioFileClientService.CLOSE_CLIENT);
-            closeClientIntent.putExtra(AudioFileClientService.HOSTNAME_KEY, hostName);
-            startService(closeClientIntent);
+            if (serverSocket != null && client != null) {
+                // close client
+                Intent closeClientIntent = new Intent(this, AudioFileClientService.class);
+                closeClientIntent.setAction(AudioFileClientService.ACTION_CLOSE_CLIENT);
+                closeClientIntent.putExtra(AudioFileClientService.HOSTNAME_KEY, hostName);
+                startService(closeClientIntent);
 
-            serverSocket.close();
-            client.close();
+                // close server
+                serverSocket.close();
+                client.close();
 
+                serverSocket = null;
+                client = null;
+            }
         }catch (Exception e){
             Log.e("JavaInfo","FileTransferService_onHandleIntent(): " + e);
             e.printStackTrace();
@@ -100,7 +135,7 @@ public class AudioFileServerService extends IntentService {
             for (String key : MusicLibrary.keySet()) {
 
                 MediaMetadataCompat mmc = MusicLibrary.getMetadataWithoutBitmap(key);
-                DownloadEntry downloadEntry = null;
+                DownloadEntry downloadEntry = new DownloadEntry();
 
                 String mediaId = mmc.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID);
                 if (mediaId == null) {
@@ -176,5 +211,25 @@ public class AudioFileServerService extends IntentService {
                 Log.e("JavaInfo","Server_onHandleIntent(): " + e);
                 e.printStackTrace();
             }
+    }
+
+    public static boolean copyFileToSocket(InputStream inputStream, ObjectOutputStream out) {
+        try {
+            byte buf[] = new byte[1024];
+            int len;
+            try {
+                while ((len = inputStream.read(buf)) != -1) {
+                    out.write(buf, 0, len);
+                    out.flush();
+                }
+
+            } catch (IOException e) {
+                Log.d("AUDIOFILESERVERSERVICE", e.toString());
+                return false;
+            }
+        }catch (Exception e){
+            Log.e("JavaInfo","DeviceDetailFragment_copyFile(): " + e);
+        }
+        return true;
     }
 }

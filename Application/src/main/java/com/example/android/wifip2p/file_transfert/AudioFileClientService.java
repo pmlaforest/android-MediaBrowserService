@@ -3,10 +3,18 @@ package com.example.android.wifip2p.file_transfert;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Environment;
 import android.util.Log;
 
+import com.example.android.mediasession.service.contentcatalogs.DownloadLibrary;
+import com.example.android.mediasession.ui.MusicPlaylistActivity;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -26,21 +34,26 @@ public class AudioFileClientService extends IntentService {
     private static final int SOCKET_TIMEOUT = 5000;
 
     public static final String ACTION_INIT_CLIENT = "com.example.android.wifidirect.ACTION_INIT_CLIENT";
-    public static final String CLOSE_CLIENT = "com.example.android.wifidirect.CLOSE_CONN";
+    public static final String ACTION_CLOSE_CLIENT = "com.example.android.wifidirect.ACTION_CLOSE_CLIENT";
+    public static final String ACTION_GET_AUDIO_FILE = "com.example.android.wifidirect.ACTION_GET_AUDIO_FILE";
 
     public static final String OWNER_KEY = "owner";
     public static final String HOSTNAME_KEY = "hostname";
+    public static final String MEDIA_ID_KEY = "mediaid";
+    public static final String FILENAME_KEY = "filename";
 
     private String isOwner = null;
     private String hostName = null;
     private int portNumber = -1;
 
-    private Socket socket = null;
+    private static Socket socket = null;
 
-    ObjectOutputStream outToServer = null;
-    ObjectInputStream inFromServer = null;
+    private static ObjectOutputStream outToServer = null;
+    private static ObjectInputStream inFromServer = null;
 
-    public static List<DownloadEntry> downloadableEntries = new ArrayList<DownloadEntry>();
+    DownloadLibrary downloadLibrary = new DownloadLibrary();
+
+    //public static List<DownloadEntry> downloadableEntries = new ArrayList<DownloadEntry>();
 
     public AudioFileClientService(String name) {
         super(name);
@@ -63,11 +76,21 @@ public class AudioFileClientService extends IntentService {
             hostName = intent.getExtras().getString(HOSTNAME_KEY);
 
             if (intent.getAction().equals(ACTION_INIT_CLIENT)) {
-                initClientConnection();
-                receiveDownloadList();
+                if (socket == null) {
+                    initClientConnection();
+                    receiveDownloadList();
+                }
             }
-            if (intent.getAction().equals(CLOSE_CLIENT)) {
-                socket.close();
+            if (intent.getAction().equals(ACTION_GET_AUDIO_FILE)) {
+                String mediaId = intent.getExtras().getString(MEDIA_ID_KEY);
+                String filename = intent.getExtras().getString(FILENAME_KEY);
+                getAudioFile(mediaId, filename);
+            }
+            if (intent.getAction().equals(ACTION_CLOSE_CLIENT)) {
+                if (socket != null) {
+                    socket.close();
+                    socket = null;
+                }
             }
 
         }catch (Exception e){
@@ -76,16 +99,44 @@ public class AudioFileClientService extends IntentService {
         }
     }
 
+    private void getAudioFile(String mediaId, String filename) {
+
+        try {
+            outToServer.writeUTF(mediaId);
+            outToServer.flush();
+
+            String musicFolderPath = Environment.getExternalStorageDirectory() + File.separator + MusicPlaylistActivity.MUSIC_FOLDER_NAME;
+
+            File folder = new File(musicFolderPath);
+            boolean success = true;
+            if (!folder.exists()) {
+                success = folder.mkdirs();
+            }
+
+            final File f = new File(musicFolderPath, filename + ".mp3");
+            f.createNewFile();
+
+            Log.d("Reading a new file", "server: copying files " + f.toString());
+            copyFileFromSocket(inFromServer, new FileOutputStream(f));
+
+        }catch (Exception e){
+            Log.e("JavaInfo","ClientService_onHandleIntent(): " + e);
+            e.printStackTrace();
+        }
+    }
+
     private void receiveDownloadList() {
 
         try {
-
             int nbOfDownloadableEntries = inFromServer.readInt();
 
             for (int entryNb = 0; entryNb  < nbOfDownloadableEntries; entryNb++) {
                 DownloadEntry downloadEntry = new DownloadEntry();
                 downloadEntry = (DownloadEntry) inFromServer.readObject();
-                downloadableEntries.add(downloadEntry);
+
+                if (!downloadLibrary.downloadableEntries.contains(downloadEntry)) {
+                    downloadLibrary.downloadableEntries.add(downloadEntry);
+                }
             }
 
         }catch (Exception e){
@@ -166,6 +217,25 @@ public class AudioFileClientService extends IntentService {
             ipAddrStr += ipAddr[i]&0xFF;
         }
         return ipAddrStr;
+    }
+
+    public static boolean copyFileFromSocket(ObjectInputStream inputStream, OutputStream out) {
+        try {
+            byte buf[] = new byte[1024];
+            int len;
+            try {
+                while ((len = inputStream.read(buf)) != -1) {
+                    out.write(buf, 0, len);
+                }
+
+            } catch (IOException e) {
+                Log.d("AUDIOFILESERVERSERVICE", e.toString());
+                return false;
+            }
+        }catch (Exception e){
+            Log.e("JavaInfo","DeviceDetailFragment_copyFile(): " + e);
+        }
+        return true;
     }
 
 }
