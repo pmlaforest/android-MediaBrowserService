@@ -20,10 +20,13 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 
 import com.example.android.BuildConfig;
+import com.example.android.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,8 +64,15 @@ public class MusicLibrary {
     }
 
     public static Bitmap getAlbumBitmap(Context context, String mediaId) {
-        return BitmapFactory.decodeResource(context.getResources(),
-                MusicLibrary.getAlbumRes(mediaId));
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(context, Uri.parse(mediaId));
+        byte[] art = mmr.getEmbeddedPicture();
+        if (art != null) {
+            return BitmapFactory.decodeByteArray(art, 0, art.length);
+        } else {
+            return BitmapFactory.decodeResource(context.getResources(),
+                    R.drawable.album_jazz_blues);
+        }
     }
 
     public static List<MediaBrowserCompat.MediaItem> getMediaItems() {
@@ -131,7 +141,7 @@ public class MusicLibrary {
                                 getAlbumArtUri(albumArtResName))
                         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                         .build());
-        albumRes.put(mediaId, albumArtResId);
+        //albumRes.put(mediaId, albumArtResId);
         musicFileName.put(mediaId, musicFilename);
     }
 }

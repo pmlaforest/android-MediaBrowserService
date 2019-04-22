@@ -21,8 +21,12 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.android.mediasession.ui.MainActivity;
+import com.example.android.mediasession.ui.MusicPlaylistActivity;
 import com.example.android.wifip2p.fragment.DeviceDetailFragment;
 import com.example.android.wifip2p.fragment.DeviceListFragment;
 import com.example.android.wifip2p.fragment.DeviceListFragment.DeviceActionListener;
@@ -91,6 +95,8 @@ public class WiFiDirectActivity extends AppCompatActivity implements ChannelList
 
             manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
             channel = manager.initialize(this, getMainLooper(), null);
+
+            setFooterElementsOnClickListener();
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, WiFiDirectActivity.PERMISSIONS_REQUEST_CODE_ACCESS_COARSE_LOCATION);
@@ -206,6 +212,57 @@ public class WiFiDirectActivity extends AppCompatActivity implements ChannelList
             Log.e("JavaInfo","Error WiFiDirectActivity_onOptionsItemSelected(): " + e);
         }
         return true;
+    }
+
+    private void setFooterElementsOnClickListener() {
+
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                switch(view.getId()){
+                    case R.id.download_button:
+                    case R.id.download_textView:
+                    case R.id.parameters_button:
+                    case R.id.parameters_textView:
+                        break;
+                    case R.id.playlist_button:
+                        startActivity(new Intent(WiFiDirectActivity.this, MusicPlaylistActivity.class));
+                        break;
+                    case R.id.playlist_textView:
+                        startActivity(new Intent(WiFiDirectActivity.this, MusicPlaylistActivity.class));
+                        break;
+                    case R.id.mediaPlayer_button:
+                        startActivity(new Intent(WiFiDirectActivity.this, MainActivity.class));
+                        break;
+                    case R.id.mediaPlayer_textView:
+                        startActivity(new Intent(WiFiDirectActivity.this, MainActivity.class));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+
+        TextView downloadTrackTextView = findViewById(R.id.download_textView);
+        ImageButton downloadTrackImageButton = findViewById(R.id.download_button);
+        downloadTrackTextView.setOnClickListener(listener);
+        downloadTrackImageButton.setOnClickListener(listener);
+
+        TextView playlistTextView = findViewById(R.id.playlist_textView);
+        ImageButton playlistImageButton = findViewById(R.id.playlist_button);
+        playlistTextView.setOnClickListener(listener);
+        playlistImageButton.setOnClickListener(listener);
+
+        TextView parametersTextView = findViewById(R.id.parameters_textView);
+        ImageButton parametersImageButton = findViewById(R.id.parameters_button);
+        parametersTextView.setOnClickListener(listener);
+        parametersImageButton.setOnClickListener(listener);
+
+        TextView mediaPlayerTextView = findViewById(R.id.mediaPlayer_textView);
+        ImageButton mediaPlayerImageButton = findViewById(R.id.mediaPlayer_button);
+        mediaPlayerTextView.setOnClickListener(listener);
+        mediaPlayerImageButton.setOnClickListener(listener);
     }
 
     @Override

@@ -207,6 +207,19 @@ public class MusicDatabase extends SQLiteOpenHelper {
                 new String[] { uriString });
     }
 
+    public String getLastRowDate() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String selectQuery = "SELECT  * FROM " + TABLE_CHANSON;
+        Cursor cursor = db.rawQuery(selectQuery, null);
+
+        if(cursor.moveToLast()){
+            //name = cursor.getString(column_index);//to get other values
+             return cursor.getString(cursor.getColumnIndex(KEY_CREATED_AT));
+        } else {
+            return null;
+        }
+    }
+
     /**
      * get datetime
      * */

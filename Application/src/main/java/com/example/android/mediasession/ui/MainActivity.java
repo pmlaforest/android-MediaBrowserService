@@ -17,6 +17,7 @@
 package com.example.android.mediasession.ui;
 
 import java.util.List;
+import java.util.ListIterator;
 
 import com.example.android.R;
 import com.example.android.mediasession.client.MediaBrowserHelper;
@@ -44,6 +45,9 @@ import android.widget.TextView;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    static List<MediaBrowserCompat.MediaItem> music_queue = null;
+    static ListIterator<MediaBrowserCompat.MediaItem> queue_iter = null;
 
     private ImageView mAlbumArt;
     private TextView mTitleTextView;
@@ -77,14 +81,15 @@ public class MainActivity extends AppCompatActivity {
         mMediaBrowserHelper.registerCallback(new MediaBrowserListener());
 
         trackIdToPlay = null;
-        Intent intent = getIntent();
 
+        Intent intent = getIntent();
         if (intent != null) {
             trackIdToPlay = intent.getStringExtra("mediaId");
-        }
-        if (savedInstanceState != null) {
+        } else if (savedInstanceState != null) {
             trackIdToPlay = savedInstanceState.getString("trackIdToPlay");
         }
+
+
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -210,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
      * and implement our app specific desires.
      */
     private class MediaBrowserConnection extends MediaBrowserHelper {
+
         private MediaBrowserConnection(Context context) {
             super(context, MusicService.class);
         }
@@ -243,9 +249,18 @@ public class MainActivity extends AppCompatActivity {
 
                 if (getMediaController().getPlaybackState() == null) {
                     // Queue up all media items for this simple sample.
-                    for (final MediaBrowserCompat.MediaItem mediaItem : children) {
-                        mediaController.addQueueItem(mediaItem.getDescription());
+                    List<MediaBrowserCompat.MediaItem> queue = MainActivity.music_queue = children;
+                    ListIterator<MediaBrowserCompat.MediaItem> it = MainActivity.queue_iter = queue.listIterator();
+                    if (queue.size() > 30) {
+                        for (int i = 0; i < 30; i++) {
+                            mediaController.addQueueItem(it.next().getDescription());
+                        }
+                    } else {
+                        for (int i = 0; i < queue.size(); i++) {
+                            mediaController.addQueueItem(it.next().getDescription());
+                        }
                     }
+
                 }
 
                 if (trackIdToPlay != null) {
@@ -255,6 +270,14 @@ public class MainActivity extends AppCompatActivity {
                     mediaController.getTransportControls().prepare();
                 }
             }
+        }
+
+        public void addQueuNext() {
+            getMediaController().addQueueItem(MainActivity.queue_iter.next().getDescription());
+        }
+
+        public void addQueuPrevious() {
+            getMediaController().addQueueItem(MainActivity.queue_iter.next().getDescription());
         }
     }
 

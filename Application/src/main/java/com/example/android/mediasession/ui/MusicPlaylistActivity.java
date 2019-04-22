@@ -81,9 +81,11 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
 
         setContentView(R.layout.activity_music_playlist);
 
-        createMusicFolder(MUSIC_FOLDER_NAME);
-        createDataBase(this);
-        initialiseMusicLibrary();
+        if (savedInstanceState == null) {
+            createMusicFolder(MUSIC_FOLDER_NAME);
+            createDataBase(this);
+            initialiseMusicLibrary();
+        }
 
         setFooterElementsOnClickListener();
         //new LongOperation().execute("");
@@ -100,10 +102,19 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
 
         musicDatabase = new MusicDatabase(this);
 
-        if (!(MusicDatabase.doesDatabaseExist(this))) {
-            initialiseDataBase();
+        Cursor cursor = getContentResolver().query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            null,
+            MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.MediaColumns.DATE_ADDED + ">?",
+            new String[]{this.musicDatabase.getLastRowDate()},
+            null
+        );
+
+        if (cursor == null) {
+            throw new RuntimeException("cannot access MediaStore");
         } else {
-            Log.i("MAINACTIVITY", "createDataBase: base de donnée déjà existante.");
+            initialiseDataBase(cursor);
+            cursor.close();
         }
     }
 
@@ -127,20 +138,11 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
     /**
      * Crée les entrées dans la BD seulement à la création.
      */
-    private void initialiseDataBase() {
+    private void initialiseDataBase(Cursor cursor) {
 
-        String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0";
-        ContentResolver cResolver = getContentResolver();
-        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         boolean isSuccessful = false;
 
-        Cursor cursor = cResolver.query(uri, null, selection, null, null);
-
-        if (cursor == null) {
-            throw new RuntimeException("cannot access MediaStore");
-        } else if (!cursor.moveToFirst()) {
-            Log.i("MAINACTIVITY", "initialiseDataBase: aucune chanson. elseif(!cursor.moveToFirst()");
-        } else {
+        if (cursor.moveToFirst()) {
             int idColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
 
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
@@ -178,7 +180,6 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                     Log.i("MAINACTIVITY", "initialiseDataBase: Chanson" + contentUri.toString() + ": incapabble de faire l'insertion initiale dans la BD.");
                 }
             } while (cursor.moveToNext());
-            cursor.close();
         }
     }
 
@@ -206,43 +207,6 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
     }
 
     private void createListOfTracks() {
-        /*
-        List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<MediaBrowserCompat.MediaItem>();
-        mediaItems =  MusicLibrary.getMediaItems();
-
-        for(MediaBrowserCompat.MediaItem item : mediaItems) {
-            MediaDescriptionCompat desc = item.getDescription();
-            if (desc.getDescription() != null) {
-
-                if (desc.getMediaId() == null) {
-                    continue;
-                }
-
-                String title = "unknown";
-                if (desc.getTitle().toString() != null) {
-                    title = desc.getTitle().toString();
-                }
-
-                String artist = "unknown";
-                item.getDescription()
-                if (desc.getSubtitle().toString() != null) {
-                    artist = desc.getSubtitle().toString();
-                }
-
-                // Theses two lines take too much time to execute ... app. 6.5 seconds for the whole MusicLibrary.
-                // DURATION HAS BEEN HARDCODED TO 0 until a suitable solution is found
-                //MediaMetadataCompat currentMetadata = MusicLibrary.getMetadata(this,item.getMediaId());
-                //int duration = (int) currentMetadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
-                
-                TableLayout table = findViewById(R.id.table1);
-                TableRow newRow = createTrackEntry(title, artist, 0, desc.getMediaId());
-                table.addView(newRow);
-            }
-        }
-        // Maybe the garbage collector will reclaim this memory ?
-        mediaItems = null;
-
-        */
 
         TableLayout table = findViewById(R.id.table1);
 
@@ -425,27 +389,25 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
      */
     private void initialiseMusicLibrary() {
 
-        if (MusicLibrary.isEmpty()) {
-            Cursor chansonPresente = musicDatabase.getAllTracks();
+        Cursor chansonPresente = musicDatabase.getAllTracks();
 
-            if (chansonPresente == null) {
-                return;
-            }
-            do {
-                MusicLibrary.createMediaMetadataCompat(
-                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_URI_STRING)),
-                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_TITRE)),
-                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ARTIST)),
-                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM)),
-                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_GENRE)),
-                        chansonPresente.getLong(chansonPresente.getColumnIndex(KEY_DURATION)),
-                        TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT))),
-                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_MUSIC_FILENAME)),
-                        chansonPresente.getInt(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_ID)),
-                        chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_NAME))
-                );
-            } while (chansonPresente.moveToNext());
-            chansonPresente.close();
+        if (chansonPresente == null) {
+            return;
         }
+        do {
+            MusicLibrary.createMediaMetadataCompat(
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_URI_STRING)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_TITRE)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ARTIST)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_GENRE)),
+                    chansonPresente.getLong(chansonPresente.getColumnIndex(KEY_DURATION)),
+                    TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT))),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_MUSIC_FILENAME)),
+                    chansonPresente.getInt(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_ID)),
+                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_NAME))
+            );
+        } while (chansonPresente.moveToNext());
+        chansonPresente.close();
     }
 }

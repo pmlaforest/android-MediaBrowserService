@@ -45,7 +45,11 @@
         <activity
             android:name=".mediasession.ui.MainActivity"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".mediasession.ui.MusicPlaylistActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".mediasession.ui.MusicPlaylistActivity"/>
         </activity>
 
         <service
@@ -73,7 +77,11 @@
         <!-- WiFiP2P -->
         <activity
             android:name=".wifip2p.WiFiDirectActivity"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:parentActivityName=".mediasession.ui.MusicPlaylistActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".mediasession.ui.MusicPlaylistActivity"/>
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
