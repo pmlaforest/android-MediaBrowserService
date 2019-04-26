@@ -155,14 +155,12 @@ public class AudioFileClientService extends IntentService {
                 portNumber  = 8989;
             }
 
-            Log.i("CLIENTASYNCTASK:", "opening client socket...");
-            Log.i("CLIENTASYNCTASK:", hostName);
-            Log.i("CLIENTASYNCTASK:", Integer.toString(portNumber));
+            Log.i("CLIENTASYNCTASK:", "opening client socket..." + hostName + Integer.toString(portNumber));
 
             socket = new Socket();
             socket.bind(null);
             socket.connect((new InetSocketAddress(hostName, portNumber)), SOCKET_TIMEOUT);
-            Log.i("CLIENTASYNCTASK:", "connecting to server...");
+            Log.i("CLIENTASYNCTASK:", "connected to server...");
 
             outToServer = new ObjectOutputStream(socket.getOutputStream());
             inFromServer = new ObjectInputStream(socket.getInputStream());
@@ -173,11 +171,6 @@ public class AudioFileClientService extends IntentService {
                 outToServer.writeUTF(distantIp);
                 outToServer.flush();
             }
-
-            Log.i("CLIENTASYNCTASK", "Sending Hello World");
-            String helloWorld = "Hello World !\n";
-            outToServer.writeUTF(helloWorld);
-            outToServer.flush();
 
         }catch (Exception e){
             Log.e("JavaInfo","ClientService_onHandleIntent(): " + e);

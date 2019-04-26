@@ -71,7 +71,9 @@ public class AudioFileServerService extends IntentService {
                 if (serverSocket == null && client == null) {
                     initServer();
                     sendDownloadList();
-                    sendAudioFile();
+                    while (true) {
+                        sendAudioFile();
+                    }
                 }
             }
             if (intent.getAction().equals(ACTION_CLOSE_SERVER)) {
@@ -182,7 +184,7 @@ public class AudioFileServerService extends IntentService {
             serverSocket = new ServerSocket(portNumber);
             Log.i(":", "opening server socket...");
             client = serverSocket.accept();
-            Log.i("SERVERASYNCTASK:", "getting ready to read in the data");
+            Log.i("SERVERASYNCTASK:", "getting ready to read in the data...");
 
             inFromClient = new ObjectInputStream(client.getInputStream());
             outToClient = new ObjectOutputStream(client.getOutputStream());
@@ -200,11 +202,6 @@ public class AudioFileServerService extends IntentService {
                 msgIntent.setAction(AudioFileClientService.ACTION_INIT_CLIENT);
                 this.startService(msgIntent);
             }
-
-            // reading Hello World !
-            String helloWorld = inFromClient.readUTF();
-            Log.i("SERVERASYNCTASK:", "message received!");
-            Log.i("SERVERASYNCTASK:", helloWorld);
 
             }
             catch(Exception e){

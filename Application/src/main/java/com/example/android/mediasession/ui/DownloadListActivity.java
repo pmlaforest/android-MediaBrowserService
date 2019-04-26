@@ -70,13 +70,12 @@ public class DownloadListActivity extends AppCompatActivity implements View.OnCl
         for (DownloadEntry downloadEntry : downloadLibrary.downloadableEntries) {
             TableRow newRow = createTrackEntry(downloadEntry.title,
                     downloadEntry.artist,
-                    0,
                     downloadEntry.mediaId);
             table.addView(newRow);
         }
     }
 
-    private TableRow createTrackEntry(String trackName, String author, int duration, String mediaId) {
+    private TableRow createTrackEntry(String trackName, String author, String mediaId) {
 
         TableRow newRow = new TableRow(this);
 
@@ -103,33 +102,9 @@ public class DownloadListActivity extends AppCompatActivity implements View.OnCl
         artistTextView.setTextSize(16);
         artistTextView.setTypeface(null, Typeface.ITALIC);
 
-        int seconds = (int) (duration / 1000) % 60;
-        int minutes = (int) ((duration / (1000 * 60)) % 60);
-        int hours = (int) ((duration / (1000 * 60 * 60)));
-
-        String formattedDurationStr = null;
-        if (hours == 0) {
-            formattedDurationStr = String.format("%d:%02d", minutes, seconds);
-        } else {
-            formattedDurationStr = String.format("%d:%02d:%02d", hours, minutes, seconds);
-        }
-
-        TextView durationTextView = new TextView(this);
-        durationTextView.setText(formattedDurationStr);
-        durationTextView.setTextSize(16);
-        durationTextView.setGravity(Gravity.RIGHT);
-        durationTextView.setPadding(0, 0, 5, 0);
-
-        durationTextView.setLayoutParams(tlparams);
-        TableRow.LayoutParams params2 = (TableRow.LayoutParams) durationTextView.getLayoutParams();
-        params2.rightMargin = 50;
-        params2.gravity = Gravity.CENTER_VERTICAL;
-        durationTextView.setLayoutParams(params2);
-
         newLayout.addView(trackNameTextView);
         newLayout.addView(artistTextView);
         newRow.addView(newLayout);
-        newRow.addView(durationTextView);
 
         return newRow;
     }
