@@ -239,16 +239,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         String caller = "";
         int id = view.getId();
 
-        try {
-            caller = getCallingActivity().getClassName();
-        } catch (NullPointerException e){
-            e.printStackTrace();
-        }
-
         if (id == R.id.download_button || id == R.id.download_textView) {
-            if (caller.equals(WiFiDirectActivity.class.getName())) {
-                //finish();
-            }
             intent = new Intent(MusicPlaylistActivity.this, WiFiDirectActivity.class);
             startActivityForResult(intent, 1);
         } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
@@ -256,9 +247,6 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
             //pass
         } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
-            if (caller.equals(MainActivity.class.getName())) {
-                //finish();
-            }
             intent = new Intent(MusicPlaylistActivity.this, MainActivity.class);
             startActivityForResult(intent, 1);
         } else {

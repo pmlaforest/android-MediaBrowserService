@@ -1,6 +1,7 @@
 package com.example.android.mediasession.service.contentcatalogs;
 
 import android.content.ContentUris;
+import android.database.CursorIndexOutOfBoundsException;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.File;
@@ -301,8 +302,10 @@ public class MusicDatabase extends SQLiteOpenHelper {
             Cursor cursor = db.rawQuery(selectQuery, null);
         ) {
             cursor.moveToLast();
-            cursor.moveToLast();
             return cursor.getString(cursor.getColumnIndex(KEY_CREATED_AT));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -321,13 +324,26 @@ public class MusicDatabase extends SQLiteOpenHelper {
      */
     public void initialise(Context context) {
 
-        Cursor c = context.getContentResolver().query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                null,
-                MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.MediaColumns.DATE_ADDED + ">?",
-                new String[]{this.getLastRowDate()},
-                null
-        );
+        String latest = this.getLastRowDate();
+        Cursor c = null;
+        if (latest == null) {
+            c = context.getContentResolver().query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    null,
+                    MediaStore.Audio.Media.IS_MUSIC + " != 0",
+                    null,
+                    null
+            );
+        } else {
+            c = context.getContentResolver().query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    null,
+                    MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.MediaColumns.DATE_ADDED + ">?",
+                    new String[]{latest},
+                    null
+            );
+        }
+
 
         if (c == null){
             throw new RuntimeException("cannot access MediaStore");
@@ -337,7 +353,7 @@ public class MusicDatabase extends SQLiteOpenHelper {
         try (
             Cursor cursor = c;
             SQLiteDatabase db = this.getWritableDatabase();
-        ){
+        ) {
             cursor.moveToFirst();
             int idColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();
@@ -370,15 +386,17 @@ public class MusicDatabase extends SQLiteOpenHelper {
                         R.drawable.album_jazz_blues,
                         "album_jazz_blues"
                 );
-                long result =  db.insert(TABLE_CHANSON, null, contentValues);
+                long result = db.insert(TABLE_CHANSON, null, contentValues);
                 if (result < 0) {
-                    Log.i(LOG,"Insertion a échouée: " +  contentValues.getAsString(KEY_MUSIC_FILENAME) + ":" + contentValues.toString());
+                    Log.i(LOG, "Insertion a échouée: " + contentValues.getAsString(KEY_MUSIC_FILENAME) + ":" + contentValues.toString());
                 }
 
             } while (cursor.moveToNext());
 
             db.setTransactionSuccessful();
 
+        } catch (CursorIndexOutOfBoundsException e) {
+            Log.i(LOG, "BD is up to date");
         } catch (Exception e) {
             e.printStackTrace();
         }
