@@ -1,6 +1,7 @@
 package com.example.android.mediasession.ui;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
@@ -35,6 +36,7 @@ import android.widget.TextView;
 import com.example.android.R;
 import com.example.android.mediasession.service.contentcatalogs.MusicDatabase;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
+import com.example.android.mediasession.service.contentcatalogs.MusicLibraryLoader;
 import com.example.android.wifip2p.WiFiDirectActivity;
 
 import org.w3c.dom.Text;
@@ -46,6 +48,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -84,7 +87,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         if (savedInstanceState == null) {
             createMusicFolder(MUSIC_FOLDER_NAME);
             createDataBase(this);
-            initialiseMusicLibrary();
+            MusicLibraryLoader.loadFromDB(this.musicDatabase);
         }
 
         setFooterElementsOnClickListener();
@@ -101,21 +104,7 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
     private void createDataBase(Context context) {
 
         musicDatabase = new MusicDatabase(this);
-
-        Cursor cursor = getContentResolver().query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            null,
-            MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.MediaColumns.DATE_ADDED + ">?",
-            new String[]{this.musicDatabase.getLastRowDate()},
-            null
-        );
-
-        if (cursor == null) {
-            throw new RuntimeException("cannot access MediaStore");
-        } else {
-            initialiseDataBase(cursor);
-            cursor.close();
-        }
+        musicDatabase.initialise(this);
     }
 
     /**
@@ -132,54 +121,6 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
                         MY_PERMISSIONS_ALL);
 
             }
-        }
-    }
-
-    /**
-     * Crée les entrées dans la BD seulement à la création.
-     */
-    private void initialiseDataBase(Cursor cursor) {
-
-        boolean isSuccessful = false;
-
-        if (cursor.moveToFirst()) {
-            int idColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
-
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-
-            do {
-                long thisId = cursor.getLong(idColumn);
-                Uri contentUri = ContentUris.withAppendedId(
-                        android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, thisId);
-
-                try {
-                    mmr.setDataSource(this, contentUri);
-                } catch (Exception e) {
-                    Log.i("MAINACTIVITY", "initialiseDataBase, mmr.setDataSource error " + e + ", " + contentUri.toString());
-                }
-                isSuccessful = musicDatabase.createTrack(
-                        contentUri.toString(),
-                        mmr.extractMetadata(mmr.METADATA_KEY_TITLE),
-                        mmr.extractMetadata(mmr.METADATA_KEY_ARTIST),
-                        mmr.extractMetadata(mmr.METADATA_KEY_ALBUM),
-                        mmr.extractMetadata(mmr.METADATA_KEY_GENRE),
-                        TimeUnit.MILLISECONDS.toSeconds(
-                                Long.parseLong(
-                                        mmr.extractMetadata(mmr.METADATA_KEY_DURATION)
-                                )
-                        ),
-                        TimeUnit.SECONDS,
-                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)),
-                        R.drawable.album_jazz_blues,
-                        "album_jazz_blues"
-                );
-
-                if (isSuccessful) {
-                    Log.i("MAINACTIVITY", "initialiseDataBase: Chanson" + contentUri.toString() + " inserré avec succès.");
-                } else {
-                    Log.i("MAINACTIVITY", "initialiseDataBase: Chanson" + contentUri.toString() + ": incapabble de faire l'insertion initiale dans la BD.");
-                }
-            } while (cursor.moveToNext());
         }
     }
 
@@ -294,35 +235,37 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
     }
 
     public void onClick(View view) {
-        Intent intent = null;
+        Intent intent;
+        String caller = "";
+        int id = view.getId();
 
-        switch (view.getId()) {
-            case R.id.download_button:
-                startActivity(new Intent(this, WiFiDirectActivity.class));
-                break;
-            case R.id.download_textView:
-                startActivity(new Intent(this, WiFiDirectActivity.class));
-                break;
-            case R.id.parameters_button:
-            case R.id.parameters_textView:
-                break;
-            case R.id.playlist_button:
-            case R.id.playlist_textView:
-                break;
-            case R.id.mediaPlayer_button:
-                intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-                break;
-            case R.id.mediaPlayer_textView:
-                intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-                break;
-            default:
-                // This is a tableRow
-                intent = new Intent(this, MainActivity.class);
-                intent.putExtra("mediaId", (String) view.getTag());
-                startActivity(intent);
-                break;
+        try {
+            caller = getCallingActivity().getClassName();
+        } catch (NullPointerException e){
+            e.printStackTrace();
+        }
+
+        if (id == R.id.download_button || id == R.id.download_textView) {
+            if (caller.equals(WiFiDirectActivity.class.getName())) {
+                //finish();
+            }
+            intent = new Intent(MusicPlaylistActivity.this, WiFiDirectActivity.class);
+            startActivityForResult(intent, 1);
+        } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
+            //something
+        } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
+            //pass
+        } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
+            if (caller.equals(MainActivity.class.getName())) {
+                //finish();
+            }
+            intent = new Intent(MusicPlaylistActivity.this, MainActivity.class);
+            startActivityForResult(intent, 1);
+        } else {
+            // This is a tableRow
+            intent = new Intent(MusicPlaylistActivity.this, MainActivity.class);
+            intent.putExtra("mediaId", (String) view.getTag());
+            startActivityForResult(intent, 1);
         }
     }
 
@@ -379,35 +322,5 @@ public class MusicPlaylistActivity extends AppCompatActivity implements View.OnC
         }
 
         return musicFolderPath;
-    }
-
-    /**
-     * Récupère les musiques de l'appareil et les ajoute à la MusicLibrary.
-     */
-    /**
-     * Récupère les musiques de l'appareille et les ajoute à la MusicLibrary.
-     */
-    private void initialiseMusicLibrary() {
-
-        Cursor chansonPresente = musicDatabase.getAllTracks();
-
-        if (chansonPresente == null) {
-            return;
-        }
-        do {
-            MusicLibrary.createMediaMetadataCompat(
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_URI_STRING)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_TITRE)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ARTIST)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_GENRE)),
-                    chansonPresente.getLong(chansonPresente.getColumnIndex(KEY_DURATION)),
-                    TimeUnit.valueOf(chansonPresente.getString(chansonPresente.getColumnIndex(KEY_DURATION_UNIT))),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_MUSIC_FILENAME)),
-                    chansonPresente.getInt(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_ID)),
-                    chansonPresente.getString(chansonPresente.getColumnIndex(KEY_ALBUM_ART_RES_NAME))
-            );
-        } while (chansonPresente.moveToNext());
-        chansonPresente.close();
     }
 }

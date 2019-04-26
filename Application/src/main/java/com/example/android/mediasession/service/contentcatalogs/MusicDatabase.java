@@ -1,9 +1,11 @@
 package com.example.android.mediasession.service.contentcatalogs;
 
+import android.content.ContentUris;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +17,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
+
+import com.example.android.R;
 
 public class MusicDatabase extends SQLiteOpenHelper {
 
@@ -132,7 +139,48 @@ public class MusicDatabase extends SQLiteOpenHelper {
         }
     }
 
-    //Retourne un curseur sur la chanson voulue
+    public ContentValues createTrack(
+            SQLiteDatabase db,
+            String uriString,
+            String titre,
+            String artist,
+            String album,
+            String genre,
+            long duration,
+            TimeUnit timeunit,
+            String musicFileName,
+            int albumArtResId,
+            String albumArtResName) {
+
+        //Remplisage des champs nulls
+        if(titre == null)
+            titre = "Aucun titre";
+        if(artist == null)
+            artist = "Aucun artiste";
+        if(album == null)
+            album = "Aucun album";
+        if(genre == null)
+            genre = "Aucun informations";
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(KEY_URI_STRING, uriString);
+        contentValues.put(KEY_TITRE, titre);
+        contentValues.put(KEY_ARTIST, artist);
+        contentValues.put(KEY_ALBUM, album);
+        contentValues.put(KEY_GENRE, genre);
+        contentValues.put(KEY_DURATION, (float)duration);
+        contentValues.put(KEY_DURATION_UNIT, timeunit.name());
+        contentValues.put(KEY_MUSIC_FILENAME, musicFileName);
+        contentValues.put(KEY_ALBUM_ART_RES_ID, albumArtResId);
+        contentValues.put(KEY_ALBUM_ART_RES_NAME, albumArtResName);
+        contentValues.put(KEY_CREATED_AT, getDateTime());
+
+        return contentValues;
+
+    }
+
+
+        //Retourne un curseur sur la chanson voulue
     public Cursor getTrack(Integer musicID) {
         SQLiteDatabase db = this.getReadableDatabase();
         String selectQuery = "SELECT  * FROM " + TABLE_CHANSON
@@ -146,17 +194,55 @@ public class MusicDatabase extends SQLiteOpenHelper {
         return res;
     }
 
-    //Retourne un curseur sur toutes les chansons
     public Cursor getAllTracks(){
-
-        SQLiteDatabase db = this.getReadableDatabase();
         String selectQuery = "SELECT  * FROM " + TABLE_CHANSON;
+        List<HashMap<String,String>> music_raws = new ArrayList<>();
+        Cursor res = null;
 
-        Cursor res =  db.rawQuery( selectQuery, null );
-        if (res != null)
+        try (SQLiteDatabase db = this.getReadableDatabase()){
+            res = db.rawQuery( selectQuery, null);
             res.moveToFirst();
-        //Pas certain sur le type de retour encore...Présentement, je retourne un curseur.
-        return res;
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        } finally {
+            return res;
+        }
+    }
+
+    //Retourne une liste de toutes les chansons
+    public List<HashMap<String,String>> getTrackList(){
+
+
+        String selectQuery = "SELECT  * FROM " + TABLE_CHANSON;
+        List<HashMap<String,String>> music_raws = new ArrayList<>();
+
+        try (
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor res=db.rawQuery( selectQuery, null );
+        ){
+            res.moveToFirst();
+            do {
+                HashMap<String,String> music = new HashMap();
+                music.put(KEY_URI_STRING, res.getString(res.getColumnIndex(KEY_URI_STRING)));
+                music.put(KEY_TITRE, res.getString(res.getColumnIndex(KEY_TITRE)));
+                music.put(KEY_ARTIST, res.getString(res.getColumnIndex(KEY_ARTIST)));
+                music.put(KEY_ALBUM, res.getString(res.getColumnIndex(KEY_ALBUM)));
+                music.put(KEY_GENRE, res.getString(res.getColumnIndex(KEY_GENRE)));
+                music.put(KEY_DURATION, res.getString(res.getColumnIndex(KEY_DURATION)));
+                music.put(KEY_DURATION_UNIT, res.getString(res.getColumnIndex(KEY_DURATION_UNIT)));
+                music.put(KEY_MUSIC_FILENAME, res.getString(res.getColumnIndex(KEY_MUSIC_FILENAME)));
+                music.put(KEY_ALBUM_ART_RES_ID, res.getString(res.getColumnIndex(KEY_ALBUM_ART_RES_ID)));
+                music.put(KEY_ALBUM_ART_RES_NAME, res.getString(res.getColumnIndex(KEY_ALBUM_ART_RES_NAME)));
+
+                music_raws.add(music);
+
+            } while (res.moveToNext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return music_raws;
     }
 
     public int getNbOfTracks(){
@@ -208,15 +294,15 @@ public class MusicDatabase extends SQLiteOpenHelper {
     }
 
     public String getLastRowDate() {
-        SQLiteDatabase db = this.getReadableDatabase();
         String selectQuery = "SELECT  * FROM " + TABLE_CHANSON;
-        Cursor cursor = db.rawQuery(selectQuery, null);
 
-        if(cursor.moveToLast()){
-            //name = cursor.getString(column_index);//to get other values
-             return cursor.getString(cursor.getColumnIndex(KEY_CREATED_AT));
-        } else {
-            return null;
+        try (
+            SQLiteDatabase db = this.getReadableDatabase();
+            Cursor cursor = db.rawQuery(selectQuery, null);
+        ) {
+            cursor.moveToLast();
+            cursor.moveToLast();
+            return cursor.getString(cursor.getColumnIndex(KEY_CREATED_AT));
         }
     }
 
@@ -228,5 +314,73 @@ public class MusicDatabase extends SQLiteOpenHelper {
                 "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         Date date = new Date();
         return dateFormat.format(date);
+    }
+
+    /**
+     * Crée les entrées dans la BD seulement à la création.
+     */
+    public void initialise(Context context) {
+
+        Cursor c = context.getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                null,
+                MediaStore.Audio.Media.IS_MUSIC + " != 0 AND " + MediaStore.MediaColumns.DATE_ADDED + ">?",
+                new String[]{this.getLastRowDate()},
+                null
+        );
+
+        if (c == null){
+            throw new RuntimeException("cannot access MediaStore");
+        }
+
+
+        try (
+            Cursor cursor = c;
+            SQLiteDatabase db = this.getWritableDatabase();
+        ){
+            cursor.moveToFirst();
+            int idColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+
+            db.beginTransaction();
+            do {
+                long thisId = cursor.getLong(idColumn);
+                Uri contentUri = ContentUris.withAppendedId(
+                        android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, thisId);
+
+                try {
+                    mmr.setDataSource(context, contentUri);
+                } catch (Exception e) {
+                    Log.i(LOG, "initialiseDataBase, mmr.setDataSource error " + e + ", " + contentUri.toString());
+                }
+                ContentValues contentValues = this.createTrack(
+                        db,
+                        contentUri.toString(),
+                        mmr.extractMetadata(mmr.METADATA_KEY_TITLE),
+                        mmr.extractMetadata(mmr.METADATA_KEY_ARTIST),
+                        mmr.extractMetadata(mmr.METADATA_KEY_ALBUM),
+                        mmr.extractMetadata(mmr.METADATA_KEY_GENRE),
+                        TimeUnit.MILLISECONDS.toSeconds(
+                                Long.parseLong(
+                                        mmr.extractMetadata(mmr.METADATA_KEY_DURATION)
+                                )
+                        ),
+                        TimeUnit.SECONDS,
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)),
+                        R.drawable.album_jazz_blues,
+                        "album_jazz_blues"
+                );
+                long result =  db.insert(TABLE_CHANSON, null, contentValues);
+                if (result < 0) {
+                    Log.i(LOG,"Insertion a échouée: " +  contentValues.getAsString(KEY_MUSIC_FILENAME) + ":" + contentValues.toString());
+                }
+
+            } while (cursor.moveToNext());
+
+            db.setTransactionSuccessful();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

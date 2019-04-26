@@ -25,6 +25,7 @@ import com.example.android.mediasession.service.MusicService;
 import com.example.android.mediasession.service.contentcatalogs.MusicLibrary;
 import com.example.android.wifip2p.WiFiDirectActivity;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -124,27 +125,29 @@ public class MainActivity extends AppCompatActivity {
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Intent intent;
+                String caller = "";
+                int id = view.getId();
 
-                switch(view.getId()){
-                    case R.id.download_button:
-                        startActivity(new Intent(MainActivity.this, WiFiDirectActivity.class));
-                        break;
-                    case R.id.download_textView:
-                        startActivity(new Intent(MainActivity.this, WiFiDirectActivity.class));
-                        break;
-                    case R.id.parameters_button:
-                    case R.id.parameters_textView:
-                        break;
-                    case R.id.playlist_button:
-                        startActivity(new Intent(MainActivity.this, MusicPlaylistActivity.class));
-                        break;
-                    case R.id.playlist_textView:
-                        startActivity(new Intent(MainActivity.this, MusicPlaylistActivity.class));
-                        break;
-                    case R.id.mediaPlayer_button:
-                    case R.id.mediaPlayer_textView:
-                    default:
-                        break;
+                try {
+                    caller = getCallingActivity().getClassName();
+                } catch (NullPointerException e){
+                    e.printStackTrace();
+                }
+
+                if (id == R.id.download_button || id == R.id.download_textView) {
+                    if (caller.equals(WiFiDirectActivity.class.getName())) {
+                        setResult(RESULT_OK);
+                        finish();
+                    }
+                    intent = new Intent(MainActivity.this, WiFiDirectActivity.class);
+                    startActivityForResult(intent, 1);
+                } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
+                    //something
+                } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
+                    finish();
+                } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
+                    //pass
                 }
             }
         };
@@ -181,6 +184,14 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         mSeekBarAudio.disconnectController();
         mMediaBrowserHelper.onStop();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK){
+            finish();
+        }
     }
 
     /**

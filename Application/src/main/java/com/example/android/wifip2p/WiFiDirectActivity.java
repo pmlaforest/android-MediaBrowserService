@@ -1,6 +1,7 @@
 package com.example.android.wifip2p;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.support.v7.app.AppCompatActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -219,27 +220,30 @@ public class WiFiDirectActivity extends AppCompatActivity implements ChannelList
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Intent intent;
+                String caller = "";
+                int id = view.getId();
 
-                switch(view.getId()){
-                    case R.id.download_button:
-                    case R.id.download_textView:
-                    case R.id.parameters_button:
-                    case R.id.parameters_textView:
-                        break;
-                    case R.id.playlist_button:
-                        startActivity(new Intent(WiFiDirectActivity.this, MusicPlaylistActivity.class));
-                        break;
-                    case R.id.playlist_textView:
-                        startActivity(new Intent(WiFiDirectActivity.this, MusicPlaylistActivity.class));
-                        break;
-                    case R.id.mediaPlayer_button:
-                        startActivity(new Intent(WiFiDirectActivity.this, MainActivity.class));
-                        break;
-                    case R.id.mediaPlayer_textView:
-                        startActivity(new Intent(WiFiDirectActivity.this, MainActivity.class));
-                        break;
-                    default:
-                        break;
+                try {
+                    caller = getCallingActivity().getClassName();
+                } catch (NullPointerException e){
+                    e.printStackTrace();
+                }
+
+
+                if (id == R.id.download_button || id == R.id.download_textView) {
+                    //pass
+                } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
+                    //something
+                } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
+                    finish();
+                } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
+                    if (caller.equals(MainActivity.class.getName())) {
+                        setResult(RESULT_OK);
+                        finish();
+                    }
+                    intent = new Intent(WiFiDirectActivity.this, MainActivity.class);
+                    startActivityForResult(intent, 1);
                 }
             }
         };
@@ -263,6 +267,14 @@ public class WiFiDirectActivity extends AppCompatActivity implements ChannelList
         ImageButton mediaPlayerImageButton = findViewById(R.id.mediaPlayer_button);
         mediaPlayerTextView.setOnClickListener(listener);
         mediaPlayerImageButton.setOnClickListener(listener);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK){
+            finish();
+        }
     }
 
     @Override
