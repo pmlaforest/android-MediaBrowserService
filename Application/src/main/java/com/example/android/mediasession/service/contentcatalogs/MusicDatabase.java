@@ -349,10 +349,9 @@ public class MusicDatabase extends SQLiteOpenHelper {
             throw new RuntimeException("cannot access MediaStore");
         }
 
-
+        SQLiteDatabase db = this.getWritableDatabase();
         try (
             Cursor cursor = c;
-            SQLiteDatabase db = this.getWritableDatabase();
         ) {
             cursor.moveToFirst();
             int idColumn = cursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
@@ -399,6 +398,10 @@ public class MusicDatabase extends SQLiteOpenHelper {
             Log.i(LOG, "BD is up to date");
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            db.endTransaction();
+            db.close();
+
         }
     }
 }
