@@ -1,8 +1,11 @@
 package com.example.android.mediasession.ui.fragment;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,25 +48,77 @@ public class FooterFragment extends Fragment implements View.OnClickListener {
     }
 
     public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.download_button:
-            case R.id.download_textView:
-                startActivity(new Intent(getActivity(), DownloadListActivity.class));
-                break;
-            case R.id.parameters_button:
-            case R.id.parameters_textView:
-                startActivity(new Intent(getActivity(), WiFiDirectActivity.class));
-                break;
-            case R.id.playlist_button:
-            case R.id.playlist_textView:
-                startActivity(new Intent(getActivity(), MusicPlaylistActivity.class));
-                break;
-            case R.id.mediaPlayer_button:
-            case R.id.mediaPlayer_textView:
-                startActivity(new Intent(getActivity(), MainActivity.class));
-                break;
-            default:
-                break;
+        Intent intent;
+        int id = view.getId();
+        Activity this_activity = getActivity();
+        String caller = "";
+
+        try {
+            caller = this_activity.getCallingActivity().getClassName();
+        } catch (NullPointerException e){
+            e.printStackTrace();
+        }
+
+        if (id == R.id.download_button || id == R.id.download_textView) {
+            String target_class_name = DownloadListActivity.class.getName();
+            if (this_activity.getClass().getName().equals(target_class_name)) {
+                return;
+            } else {
+                intent = new Intent(this_activity, DownloadListActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                this_activity.startActivity(intent);
+            }
+
+            /*    if (caller.equals(target_class_name)) {
+                this_activity.setResult(Activity.RESULT_OK);
+                this_activity.finish();
+            } else {
+                intent = new Intent(this_activity, DownloadListActivity.class);
+                this_activity.startActivityForResult(intent, 1);
+            }*/
+        } else if (id == R.id.parameters_button || id == R.id.parameters_textView) {
+            String target_class_name = WiFiDirectActivity.class.getName();
+            if (this_activity.getClass().getName().equals(target_class_name)) {
+                return;
+            } else {
+                intent = new Intent(this_activity, WiFiDirectActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                this_activity.startActivity(intent);
+            }
+
+                /*if (caller.equals(target_class_name)) {
+                this_activity.setResult(Activity.RESULT_OK);
+                this_activity.finish();
+            } else {
+                intent = new Intent(this_activity, WiFiDirectActivity.class);
+                this_activity.startActivityForResult(intent, 1);
+            }*/
+        } else if (id == R.id.playlist_button || id == R.id.playlist_textView) {
+            String target_class_name = MusicPlaylistActivity.class.getName();
+            if (this_activity.getClass().getName().equals(target_class_name)) {
+                return;
+            } else {
+                intent = new Intent(this_activity, MusicPlaylistActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                this_activity.startActivity(intent);
+            }
+        } else if (id == R.id.mediaPlayer_button || id == R.id.mediaPlayer_textView) {
+            String target_class_name = MainActivity.class.getName();
+            if (this_activity.getClass().getName().equals(target_class_name)) {
+                return;
+            } else {
+                intent = new Intent(this_activity, MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                this_activity.startActivity(intent);
+            }
+
+                /*if (caller.equals(target_class_name)) {
+                this_activity.setResult(Activity.RESULT_OK);
+                this_activity.finish();
+            } else {
+                intent = new Intent(this_activity, MainActivity.class);
+                this_activity.startActivityForResult(intent, 1);
+            }*/
         }
     }
 

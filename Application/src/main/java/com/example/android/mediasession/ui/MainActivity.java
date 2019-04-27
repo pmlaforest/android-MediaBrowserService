@@ -98,27 +98,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        try {
-            getMenuInflater().inflate(R.menu.main_menu, menu);
-        }catch (Exception e){
-            Log.e("JavaInfo","Error MainActivity_onCreateOptionsMenu(): " + e);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.shortcut_wifip2p:
-                startActivity(new Intent(MainActivity.this, WiFiDirectActivity.class));
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
         mMediaBrowserHelper.onStart();
@@ -131,13 +110,6 @@ public class MainActivity extends AppCompatActivity {
         mMediaBrowserHelper.onStop();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode != RESULT_OK){
-            finish();
-        }
-    }
 
     /**
      * Convenience class to collect the click listeners together.

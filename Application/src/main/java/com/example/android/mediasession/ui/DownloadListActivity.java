@@ -123,4 +123,5 @@ public class DownloadListActivity extends AppCompatActivity implements View.OnCl
         intent.setAction(AudioFileClientService.ACTION_GET_AUDIO_FILE);
         startService(intent);
     }
+
 }

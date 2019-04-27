@@ -41,6 +41,7 @@
         <!-- MediaBrowser -->
         <activity
             android:name=".mediasession.ui.MainActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme"
             android:parentActivityName=".mediasession.ui.MusicPlaylistActivity"
@@ -52,8 +53,15 @@
 
         <activity
             android:name=".mediasession.ui.DownloadListActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleTop"
-            android:theme="@style/AppTheme"></activity>
+            android:theme="@style/AppTheme"
+            android:parentActivityName=".mediasession.ui.MusicPlaylistActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".mediasession.ui.MusicPlaylistActivity"/>
+        </activity>
 
         <service
                 android:name=".mediasession.service.MusicService"
@@ -80,15 +88,12 @@
         <!-- WiFiP2P -->
         <activity
             android:name=".wifip2p.WiFiDirectActivity"
-            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:parentActivityName=".mediasession.ui.MusicPlaylistActivity"
             android:exported="false">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".mediasession.ui.MusicPlaylistActivity"/>
-            <intent-filter>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
         </activity>
 
         <provider
