@@ -57,6 +57,13 @@ public class MusicLibraryLoader {
         }
     }
 
+    /**
+     * Permet de signaler au android MediaStore la présence d'un fichier
+     * nouvellement ajouté à l'appareille (ex. un fichier downloadé) et
+     * le charger dans la MusicLibrary.
+     * @param context
+     * @param file
+     */
     public static void loadFromNewFile(Context context, File file) {
         MediaScannerConnection.scanFile(
                 context,
@@ -92,6 +99,11 @@ public class MusicLibraryLoader {
 
     }
 
+    /**
+     * Overload pour prendre une liste de fichiers
+     * @param context
+     * @param files
+     */
     public static void loadFromNewFile(Context context, ArrayList<File> files) {
         ArrayList<String> paths = new ArrayList<>();
         for (File file : files) {
