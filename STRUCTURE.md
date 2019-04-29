@@ -1,4 +1,4 @@
-Voici la structure des fichiers/dossiers
+﻿Voici la structure des fichiers/dossiers
 
 Application/src/main/java/com/example/android/
 |
@@ -57,11 +57,16 @@ Application/src/main/java/com/example/android/
 |   |
 |   --- fragment/                   <>
 |   |
-|   --- DeviceDetailFragment        <---
+|   --- DeviceDetailFragment        <--- Inchange selon exemple provenant de Google 
+|   |			    				https://android.googlesource.com/platform/development/+/master/samples/WiFiDirectDemo/
 |   |
-|   --- DeviceListFragemnt          <---
-|
-|   --- WiFiDirectActivity          <---
-|   --- WiFiDirectBroadcastReceiver <---
+|   --- DeviceListFragment          <--- Inchange selon exemple provenant de Google 
+|   |								https://android.googlesource.com/platform/development/+/master/samples/WiFiDirectDemo/
+|   |
+|   --- WiFiDirectActivity          <--- Ajout d'une demande de permission a l'utilisateur,
+|			 							Ajout d'une barre de tache inferieure,
+|										Ajout de Toasts lors de connexion et de deconnexion au Wifi P2P. 
+|   --- WiFiDirectBroadcastReceiver <--- Inchange selon exemple provenant de Google 
+|										https://android.googlesource.com/platform/development/+/master/samples/WiFiDirectDemo/
 |
 END
